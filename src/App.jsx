@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 // Available actions for the configuration
 const ACTIONS = [
+  { id: 'start_pose', label: 'Start Pose', hasConfig: true },
   { id: 'near_launch', label: 'Near Launch' },
   { id: 'far_launch', label: 'Far Launch' },
   { id: 'spike_1', label: 'Spike 1' },
@@ -54,11 +55,19 @@ function App() {
   }, [presets]);
 
   const addAction = (action) => {
+    let config = null;
+    if (action.hasConfig) {
+      if (action.id === 'start_pose') {
+        config = { poseType: 'near', x: 0, y: 0, heading: 0 };
+      } else if (action.id === 'wait') {
+        config = { waitTime: 0 };
+      }
+    }
     setActionList(prev => [...prev, {
       id: crypto.randomUUID(),
       type: action.id,
       label: action.label,
-      config: action.hasConfig ? { waitTime: 0 } : null
+      config
     }]);
   };
 
@@ -87,15 +96,54 @@ function App() {
     ));
   };
 
-  const getConfig = () => ({
-    alliance,
-    startLocation,
-    // eslint-disable-next-line no-unused-vars
-    actions: actionList.map(({ id, ...rest }) => rest)
-  });
+  const updateStartPose = (id, field, value) => {
+    setActionList(actionList.map(action => {
+      if (action.id !== id) return action;
+      
+      if (field === 'poseType') {
+        return { ...action, config: { ...action.config, [field]: value } };
+      }
+      
+      // For numeric fields, parse or default to 0
+      const numValue = parseFloat(value);
+      return { ...action, config: { ...action.config, [field]: isNaN(numValue) ? 0 : numValue } };
+    }));
+  };
 
-  const exportJSON = () => {
-    return JSON.stringify(getConfig(), null, 2);
+  const getConfig = () => {
+    // Use abbreviated keys for compact JSON
+    const config = {
+      a: alliance === 'red' ? 'r' : 'b',
+      s: startLocation === 'near' ? 'n' : 'f',
+      // Remove id and label from actions (not needed in export)
+      // eslint-disable-next-line no-unused-vars
+      acts: actionList.map(({ id, label, ...rest }) => {
+        const action = { t: rest.type };
+        if (rest.config) {
+          // Compact config representation
+          if (rest.type === 'start_pose') {
+            const pose = rest.config;
+            if (pose.poseType === 'near') {
+              action.p = 'n';
+            } else if (pose.poseType === 'far') {
+              action.p = 'f';
+            } else {
+              action.p = { x: pose.x, y: pose.y, h: pose.heading };
+            }
+          } else if (rest.type === 'wait') {
+            action.w = rest.config.waitTime;
+          }
+        }
+        return action;
+      })
+    };
+    return config;
+  };
+
+  const exportJSON = (minified = false) => {
+    // minified=true returns compact JSON without whitespace for QR codes
+    // minified=false returns formatted JSON for display
+    return JSON.stringify(getConfig(), null, minified ? 0 : 2);
   };
 
   const downloadJSON = () => {
@@ -252,43 +300,110 @@ function App() {
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {actionList.map((action, index) => (
-                    <div key={action.id} className="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-500 w-6">{index + 1}.</span>
-                      <span className="flex-1 text-sm font-medium text-gray-800">{action.label}</span>
-                      
-                      {action.config && (
-                        <input
-                          type="number"
-                          value={action.config.waitTime}
-                          onChange={(e) => updateWaitTime(action.id, e.target.value)}
-                          placeholder="ms"
-                          className="w-20 px-2 py-1 text-sm border rounded"
-                          min="0"
-                        />
-                      )}
-                      
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => moveAction(action.id, 'up')}
-                          disabled={index === 0}
-                          className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          onClick={() => moveAction(action.id, 'down')}
-                          disabled={index === actionList.length - 1}
-                          className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          onClick={() => removeAction(action.id)}
-                          className="p-1 text-red-600 hover:text-red-800"
-                        >
-                          ×
-                        </button>
+                    <div key={action.id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-gray-500 w-6">{index + 1}.</span>
+                        <span className="flex-1 text-sm font-medium text-gray-800">{action.label}</span>
+                        
+                        {action.type === 'wait' && action.config && (
+                          <input
+                            type="number"
+                            value={action.config.waitTime}
+                            onChange={(e) => updateWaitTime(action.id, e.target.value)}
+                            placeholder="ms"
+                            className="w-20 px-2 py-1 text-sm border rounded"
+                            min="0"
+                          />
+                        )}
+                        
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => moveAction(action.id, 'up')}
+                            disabled={index === 0}
+                            className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            onClick={() => moveAction(action.id, 'down')}
+                            disabled={index === actionList.length - 1}
+                            className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            onClick={() => removeAction(action.id)}
+                            className="p-1 text-red-600 hover:text-red-800"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
+                      
+                      {action.type === 'start_pose' && action.config && (
+                        <div className="mt-2 ml-8 space-y-2">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateStartPose(action.id, 'poseType', 'near')}
+                              className={`px-3 py-1 text-xs rounded ${
+                                action.config.poseType === 'near'
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              Near
+                            </button>
+                            <button
+                              onClick={() => updateStartPose(action.id, 'poseType', 'far')}
+                              className={`px-3 py-1 text-xs rounded ${
+                                action.config.poseType === 'far'
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              Far
+                            </button>
+                            <button
+                              onClick={() => updateStartPose(action.id, 'poseType', 'custom')}
+                              className={`px-3 py-1 text-xs rounded ${
+                                action.config.poseType === 'custom'
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'bg-gray-200 text-gray-700'
+                              }`}
+                            >
+                              Custom
+                            </button>
+                          </div>
+                          {action.config.poseType === 'custom' && (
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={action.config.x}
+                                onChange={(e) => updateStartPose(action.id, 'x', e.target.value)}
+                                placeholder="X"
+                                className="w-20 px-2 py-1 text-xs border rounded"
+                                step="0.1"
+                              />
+                              <input
+                                type="number"
+                                value={action.config.y}
+                                onChange={(e) => updateStartPose(action.id, 'y', e.target.value)}
+                                placeholder="Y"
+                                className="w-20 px-2 py-1 text-xs border rounded"
+                                step="0.1"
+                              />
+                              <input
+                                type="number"
+                                value={action.config.heading}
+                                onChange={(e) => updateStartPose(action.id, 'heading', e.target.value)}
+                                placeholder="Heading"
+                                className="w-20 px-2 py-1 text-xs border rounded"
+                                step="0.1"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -328,13 +443,16 @@ function App() {
 
               {/* QR Code */}
               {showQR && (
-                <div className="bg-white p-4 rounded-lg border-2 border-gray-200 flex justify-center">
+                <div className="bg-white p-4 rounded-lg border-2 border-gray-200 flex flex-col items-center gap-2">
                   <QRCodeSVG
-                    value={exportJSON()}
+                    value={exportJSON(true)}
                     size={256}
-                    level="M"
+                    level="L"
                     includeMargin={true}
                   />
+                  <p className="text-xs text-gray-500">
+                    {exportJSON(true).length} bytes
+                  </p>
                 </div>
               )}
             </div>
