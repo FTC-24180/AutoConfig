@@ -97,17 +97,11 @@ function App() {
   };
 
   const updateStartPose = (id, field, value) => {
-    setActionList(actionList.map(action => {
-      if (action.id !== id) return action;
-      
-      if (field === 'poseType') {
-        return { ...action, config: { ...action.config, [field]: value } };
-      }
-      
-      // For numeric fields, parse or default to 0
-      const numValue = parseFloat(value);
-      return { ...action, config: { ...action.config, [field]: isNaN(numValue) ? 0 : numValue } };
-    }));
+    setActionList(actionList.map(action =>
+      action.id === id
+        ? { ...action, config: { ...action.config, [field]: field === 'poseType' ? value : (parseFloat(value) || 0) } }
+        : action
+    ));
   };
 
   const getConfig = () => {
@@ -115,7 +109,6 @@ function App() {
     const config = {
       a: alliance === 'red' ? 'r' : 'b',
       s: startLocation === 'near' ? 'n' : 'f',
-      // Remove id and label from actions (not needed in export)
       // eslint-disable-next-line no-unused-vars
       acts: actionList.map(({ id, label, ...rest }) => {
         const action = { t: rest.type };
@@ -140,10 +133,8 @@ function App() {
     return config;
   };
 
-  const exportJSON = (minified = false) => {
-    // minified=true returns compact JSON without whitespace for QR codes
-    // minified=false returns formatted JSON for display
-    return JSON.stringify(getConfig(), null, minified ? 0 : 2);
+  const exportJSON = (compact = false) => {
+    return JSON.stringify(getConfig(), null, compact ? 0 : 2);
   };
 
   const downloadJSON = () => {
