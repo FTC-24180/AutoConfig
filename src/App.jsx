@@ -1,109 +1,48 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useActionGroups } from './hooks/useActionGroups';
+import { useDragAndDrop } from './hooks/useDragAndDrop';
+import { usePresets } from './hooks/usePresets';
+import { ActionSequence } from './components/ActionSequence';
+import { ActionPicker } from './components/ActionPicker';
+import { ManageActionsModal } from './components/ManageActionsModal';
+import { isValidReorder, createNewAction } from './utils/actionUtils';
 
-// Grouped actions for better organization
-const ACTION_GROUPS = {
-  start: {
-    label: 'Start Position',
-    icon: '🏁',
-    actions: [
-      { id: 'start_front', label: 'Front', hasConfig: true, configType: 'start', positionType: 'front' },
-      { id: 'start_back', label: 'Back', hasConfig: true, configType: 'start', positionType: 'back' },
-      { id: 'start_custom', label: 'Custom', hasConfig: true, configType: 'start', positionType: 'custom' }
-    ]
-  },
-  launch: {
-    label: 'Launch',
-    icon: '🚀',
-    actions: [
-      { id: 'near_launch', label: 'Near Launch' },
-      { id: 'far_launch', label: 'Far Launch' }
-    ]
-  },
-  pickup: {
-    label: 'Pickup',
-    icon: '📦',
-    actions: [
-      { id: 'spike_1', label: 'Spike 1' },
-      { id: 'spike_2', label: 'Spike 2' },
-      { id: 'spike_3', label: 'Spike 3' },
-      { id: 'corner', label: 'Corner' }
-    ]
-  },
-  parking: {
-    label: 'Parking',
-    icon: '🅿️',
-    actions: [
-      { id: 'near_park', label: 'Park (Near)' },
-      { id: 'far_park', label: 'Park (Far)' }
-    ]
-  },
-  other: {
-    label: 'Other',
-    icon: '⚙️',
-    actions: [
-      { id: 'dump', label: 'Dump' },
-      { id: 'drive_to', label: 'DriveTo' },
-      { id: 'wait', label: 'Wait', hasConfig: true, configType: 'wait' }
-    ]
-  }
-};
-
-// Load presets from localStorage
-const loadInitialPresets = () => {
-  const savedPresets = localStorage.getItem('ftc-autoconfig-presets');
-  if (savedPresets) {
-    try {
-      return JSON.parse(savedPresets);
-    } catch (e) {
-      console.error('Failed to load presets:', e);
-      return [];
-    }
-  }
-  return [];
-};
+const PICKUP_IDS = ['spike_1', 'spike_2', 'spike_3', 'corner'];
 
 function App() {
   const [alliance, setAlliance] = useState('red');
   const [startLocation, setStartLocation] = useState('near');
   const [actionList, setActionList] = useState([]);
-  const [presets, setPresets] = useState(loadInitialPresets);
-  const [presetName, setPresetName] = useState('');
   const [showQR, setShowQR] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
+  const [showManageActions, setShowManageActions] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState(null);
+  const [presetName, setPresetName] = useState('');
 
-  // Responsive flag: mobile if width <= 640
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 640 : true);
+  
+  const { presets, savePreset, deletePreset } = usePresets();
+  const actionGroupsHook = useActionGroups();
+  
+  const dragHandlers = useDragAndDrop(
+    actionList,
+    setActionList,
+    (from, to) => isValidReorder(actionList, from, to)
+  );
+
+  // Derived flags
+  const hasStart = actionList.some(a => a.configType === 'start');
+  const hasPark = actionList.some(a => a.type === 'near_park' || a.type === 'far_park');
+  const startIndex = actionList.findIndex(a => a.configType === 'start');
+  const parkIndex = actionList.findIndex(a => a.type === 'near_park' || a.type === 'far_park');
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 640);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Drag state
-  const [dragIndex, setDragIndex] = useState(-1);
-  const [hoverIndex, setHoverIndex] = useState(-1);
-  const touchActiveRef = useRef(false);
-  const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
-
-  // Pointer-based drag state for better mobile support
-  const pointerActiveRef = useRef(false);
-  const pointerIdRef = useRef(null);
-  const pointerPendingRef = useRef(false);
-  const pointerStartRef = useRef({ x: 0, y: 0 });
-  const DRAG_START_THRESHOLD = 8; // pixels
-
-  // Derived flags
-  const hasStart = actionList.some(a => a.configType === 'start');
-  const hasPark = actionList.some(a => a.type === 'near_park' || a.type === 'far_park');
-  const PICKUP_IDS = ['spike_1', 'spike_2', 'spike_3', 'corner'];
-
-  // Indexes for special positions
-  const startIndex = actionList.findIndex(a => a.configType === 'start');
-  const parkIndex = actionList.findIndex(a => a.type === 'near_park' || a.type === 'far_park');
-
-  // Register service worker for PWA
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch((error) => {
@@ -112,284 +51,22 @@ function App() {
     }
   }, []);
 
-  // Save presets to localStorage whenever they change
-  useEffect(() => {
-    if (presets.length > 0) {
-      localStorage.setItem('ftc-autoconfig-presets', JSON.stringify(presets));
-    }
-  }, [presets]);
-
-  const isValidReorder = (fromIndex, toIndex) => {
-    if (fromIndex === -1 || toIndex === -1) return false;
-    const dragged = actionList[fromIndex];
-    if (!dragged) return false;
-    if (dragged.configType === 'start') return false;
-    if (dragged.type === 'near_park' || dragged.type === 'far_park') return false;
-
-    // simulate list
-    const without = actionList.filter((_, i) => i !== fromIndex);
-    let insertIndex = toIndex;
-    if (fromIndex < toIndex) insertIndex = toIndex - 1;
-    without.splice(insertIndex, 0, dragged);
-
-    // start must be at index 0
-    const newStartIndex = without.findIndex(a => a.configType === 'start');
-    if (newStartIndex !== 0) return false;
-    // park if present must be last
-    const newParkIndex = without.findIndex(a => a.type === 'near_park' || a.type === 'far_park');
-    if (newParkIndex !== -1 && newParkIndex !== without.length - 1) return false;
-    // cannot insert at front (index 0) unless dragged is start (we already blocked dragging start)
-    if (insertIndex === 0) return false;
-    return true;
-  };
-
-  // Desktop drag handlers
-  const handleDragStart = (e, index) => {
-    setDragIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', String(index)); } catch (err) {}
-    // set initial drag position
-    setDragPos({ x: e.clientX, y: e.clientY });
-  };
-  const handleDragOver = (e, index) => {
-    e.preventDefault();
-    setHoverIndex(index);
-    setDragPos({ x: e.clientX, y: e.clientY });
-  };
-  const handleDrop = (e, index) => {
-    e.preventDefault();
-    const from = dragIndex !== -1 ? dragIndex : parseInt(e.dataTransfer.getData('text/plain'), 10);
-    const to = index;
-    if (isValidReorder(from, to)) {
-      const item = actionList[from];
-      const copy = actionList.filter((_, i) => i !== from);
-      let insertIndex = to;
-      if (from < to) insertIndex = to - 1;
-      copy.splice(insertIndex, 0, item);
-      setActionList(copy);
-    }
-    setDragIndex(-1);
-    setHoverIndex(-1);
-    setDragPos({ x: 0, y: 0 });
-  };
-  const handleDropAtEnd = (e) => {
-    e.preventDefault();
-    const from = dragIndex !== -1 ? dragIndex : parseInt(e.dataTransfer.getData('text/plain'), 10);
-    const to = actionList.length; // drop at end
-    if (isValidReorder(from, to)) {
-      const item = actionList[from];
-      const copy = actionList.filter((_, i) => i !== from);
-      let insertIndex = to;
-      if (from < to) insertIndex = to - 1;
-      copy.splice(insertIndex, 0, item);
-      setActionList(copy);
-    }
-    setDragIndex(-1);
-    setHoverIndex(-1);
-    setDragPos({ x: 0, y: 0 });
-  };
-
-  // Touch handlers for mobile
-  const handleTouchStart = (e, index) => {
-    const action = actionList[index];
-    if (!action) return;
-    if (action.configType === 'start') return;
-    if (action.type === 'near_park' || action.type === 'far_park') return;
-
-    touchActiveRef.current = true;
-    setDragIndex(index);
-    setHoverIndex(index);
-
-    const touch = e.touches[0];
-    if (touch) setDragPos({ x: touch.clientX, y: touch.clientY });
-
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!touchActiveRef.current) return;
-    const touch = e.touches[0];
-    if (!touch) return;
-    setDragPos({ x: touch.clientX, y: touch.clientY });
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!el) return;
-    const itemEl = el.closest('[data-action-index]');
-    if (itemEl) {
-      const idx = parseInt(itemEl.getAttribute('data-action-index'), 10);
-      setHoverIndex(idx);
-    } else {
-      setHoverIndex(actionList.length);
-    }
-    if (e.cancelable) {
-      try { e.preventDefault(); } catch (err) {}
-    }
-  };
-
-  const handleTouchEnd = (e) => {
-    if (!touchActiveRef.current) return;
-    touchActiveRef.current = false;
-    const from = dragIndex;
-    const to = hoverIndex === -1 ? actionList.length : hoverIndex;
-    if (isValidReorder(from, to)) {
-      const item = actionList[from];
-      const copy = actionList.filter((_, i) => i !== from);
-      let insertIndex = to;
-      if (from < to) insertIndex = to - 1;
-      copy.splice(insertIndex, 0, item);
-      setActionList(copy);
-    }
-    setDragIndex(-1);
-    setHoverIndex(-1);
-    setDragPos({ x: 0, y: 0 });
-
-    window.removeEventListener('touchmove', handleTouchMove);
-    window.removeEventListener('touchend', handleTouchEnd);
-  };
-
-  // Pointer handlers (re-added) --------------------------------
-  const handlePointerDown = (e, index) => {
-    // Only handle touch/pen pointers (ignore mouse as desktop uses native drag)
-    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
-    const action = actionList[index];
-    if (!action) return;
-    if (action.configType === 'start') return;
-    if (action.type === 'near_park' || action.type === 'far_park') return;
-
-    // Enter pending state; only start actual drag after threshold movement
-    pointerPendingRef.current = true;
-    pointerIdRef.current = e.pointerId;
-    pointerStartRef.current = { x: e.clientX, y: e.clientY };
-    // store intended index to start dragging from
-    setDragIndex(index);
-    setHoverIndex(index);
-
-    // listen on window so we receive moves/up even if pointer leaves the element
-    window.addEventListener('pointermove', handlePointerMove, { passive: false });
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
-
-    // do not preventDefault here so normal scrolling still works until threshold
-  };
-
-  const handlePointerMove = (e) => {
-    if (e.pointerId !== pointerIdRef.current) return;
-
-    // If we're pending, check if movement exceeded threshold to start drag
-    if (pointerPendingRef.current && !pointerActiveRef.current) {
-      const dx = e.clientX - pointerStartRef.current.x;
-      const dy = e.clientY - pointerStartRef.current.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist >= DRAG_START_THRESHOLD) {
-        // begin active drag: capture pointer and prevent scrolling via CSS
-        pointerActiveRef.current = true;
-        pointerPendingRef.current = false;
-        try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
-        // lock touch-action to prevent scrolling (avoids needing preventDefault)
-        try { document.body.style.touchAction = 'none'; } catch (err) {}
-        // ensure drag visuals start at current position
-        setDragPos({ x: e.clientX, y: e.clientY });
-      } else {
-        return; // still pending, don't treat as drag
-      }
-    }
-
-    if (!pointerActiveRef.current) return;
-
-    setDragPos({ x: e.clientX, y: e.clientY });
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    if (!el) return;
-    const itemEl = el.closest('[data-action-index]');
-    if (itemEl) {
-      const idx = parseInt(itemEl.getAttribute('data-action-index'), 10);
-      setHoverIndex(idx);
-    } else {
-      setHoverIndex(actionList.length);
-    }
-    // only call preventDefault if the event is cancelable
-    if (e.cancelable) {
-      try { e.preventDefault(); } catch (err) {}
-    }
-  };
-
-  const handlePointerUp = (e) => {
-    if (e.pointerId !== pointerIdRef.current) return;
-
-    // If we were pending (no significant move), treat as tap/cancel and cleanup
-    if (pointerPendingRef.current && !pointerActiveRef.current) {
-      pointerPendingRef.current = false;
-      pointerIdRef.current = null;
-      setDragIndex(-1);
-      setHoverIndex(-1);
-
-      // remove global listeners
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
-      return;
-    }
-
-    if (!pointerActiveRef.current) return;
-
-    pointerActiveRef.current = false;
-    pointerIdRef.current = null;
-
-    const from = dragIndex;
-    const to = hoverIndex === -1 ? actionList.length : hoverIndex;
-    if (isValidReorder(from, to)) {
-      const item = actionList[from];
-      const copy = actionList.filter((_, i) => i !== from);
-      let insertIndex = to;
-      if (from < to) insertIndex = to - 1;
-      copy.splice(insertIndex, 0, item);
-      setActionList(copy);
-    }
-
-    setDragIndex(-1);
-    setHoverIndex(-1);
-    setDragPos({ x: 0, y: 0 });
-
-    try { e.target.releasePointerCapture(e.pointerId); } catch (err) {}
-
-    // remove global listeners
-    window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup', handlePointerUp);
-    window.removeEventListener('pointercancel', handlePointerUp);
-
-    // restore touch-action
-    try { document.body.style.touchAction = ''; } catch (err) {}
-
-    // only call preventDefault if the event is cancelable
-    if (e.cancelable) {
-      try { e.preventDefault(); } catch (err) {}
-    }
-  };
-
-
   const addAction = (action) => {
-    // If no start has been added yet, only allow adding start actions
     if (!hasStart && action.configType !== 'start') {
       alert('Please add a Start action first.');
       return;
     }
 
-    // Check if trying to add a start action when one already exists
-    if (action.configType === 'start') {
-      if (hasStart) {
-        alert('Only one Start action is allowed. Please remove the existing start action first.');
-        return;
-      }
+    if (action.configType === 'start' && hasStart) {
+      alert('Only one Start action is allowed. Please remove the existing start action first.');
+      return;
     }
 
-    // Check if trying to add a park action when one already exists
-    if (action.id === 'near_park' || action.id === 'far_park') {
-      if (hasPark) {
-        alert('Only one Park action is allowed. Please remove the existing park action first.');
-        return;
-      }
+    if ((action.id === 'near_park' || action.id === 'far_park') && hasPark) {
+      alert('Only one Park action is allowed. Please remove the existing park action first.');
+      return;
     }
 
-    // Prevent duplicate pickup sub-actions
     if (PICKUP_IDS.includes(action.id)) {
       const exists = actionList.some(a => a.type === action.id);
       if (exists) {
@@ -398,51 +75,19 @@ function App() {
       }
     }
 
-    let config = null;
-    if (action.hasConfig) {
-      if (action.configType === 'wait') {
-        config = { waitTime: 0 };
-      } else if (action.configType === 'start') {
-        if (action.positionType === 'custom') {
-          config = {
-            positionType: 'custom',
-            x: 0,
-            y: 0,
-            theta: 0
-          };
-        } else {
-          config = {
-            positionType: action.positionType
-          };
-        }
-      }
-    }
+    const newAction = createNewAction(action);
 
-    const newAction = {
-      id: crypto.randomUUID(),
-      type: action.id,
-      label: action.label,
-      config: config,
-      configType: action.configType
-    };
-
-    // If a park action exists, insert the new action just before the park (keep park last)
     if (hasPark) {
       const parkIndex = actionList.findIndex(a => a.type === 'near_park' || a.type === 'far_park');
-      if (parkIndex === -1) {
-        setActionList(prev => [...prev, newAction]);
-      } else {
-        setActionList(prev => {
-          const copy = [...prev];
-          copy.splice(parkIndex, 0, newAction);
-          return copy;
-        });
-      }
+      setActionList(prev => {
+        const copy = [...prev];
+        copy.splice(parkIndex === -1 ? copy.length : parkIndex, 0, newAction);
+        return copy;
+      });
     } else {
       setActionList(prev => [...prev, newAction]);
     }
 
-    // keep modal open
     setExpandedGroup(expandedGroup);
   };
 
@@ -474,28 +119,12 @@ function App() {
     ));
   };
 
-  // Fix: use previous state and correct arrow function syntax to avoid parse errors
   const updateStartPositionNumeric = (id, field, value) => {
     setActionList(prev => prev.map(action =>
       action.id === id
         ? { ...action, config: { ...action.config, [field]: parseFloat(value) || 0 } }
         : action
     ));
-  };
-
-  const getActionDisplayLabel = (action) => {
-    if (action.configType === 'start' && action.config) {
-      const posType = action.config.positionType;
-      if (posType === 'front') return 'Start (Front)';
-      if (posType === 'back') return 'Start (Back)';
-      if (posType === 'custom') {
-        const x = action.config.x ?? 0;
-        const y = action.config.y ?? 0;
-        const theta = action.config.theta ?? 0;
-        return `Start (${x}, ${y}, ${theta}°)`;
-      }
-    }
-    return action.label;
   };
 
   const getConfig = () => ({
@@ -519,12 +148,10 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  const savePreset = () => {
-    if (!presetName.trim()) { alert('Please enter a preset name'); return; }
-    const newPreset = { id: Date.now(), name: presetName, config: getConfig() };
-    setPresets([...presets, newPreset]);
-    setPresetName('');
-    alert('Preset saved!');
+  const handleSavePreset = () => {
+    if (savePreset(presetName, getConfig())) {
+      setPresetName('');
+    }
   };
 
   const loadPreset = (preset) => {
@@ -533,13 +160,13 @@ function App() {
     setActionList(preset.config.actions.map(action => ({ ...action, id: crypto.randomUUID() })));
   };
 
-  const deletePreset = (id) => { if (confirm('Are you sure you want to delete this preset?')) setPresets(presets.filter(p => p.id !== id)); };
-  const clearAll = () => { if (confirm('Clear all actions?')) setActionList([]); };
+  const clearAll = () => {
+    if (confirm('Clear all actions?')) setActionList([]);
+  };
 
-  // Theme colors for subtle alliance tinting
   const theme = alliance === 'red'
-    ? { from: '#fff5f5', to: '#fff1f2', border: '#fecaca', accent: '#ef4444' } // soft red
-    : { from: '#eff6ff', to: '#eef2ff', border: '#bfdbfe', accent: '#3b82f6' }; // soft blue
+    ? { from: '#fff5f5', to: '#fff1f2', border: '#fecaca', accent: '#ef4444' }
+    : { from: '#eff6ff', to: '#eef2ff', border: '#bfdbfe', accent: '#3b82f6' };
 
   return (
     <div className="min-h-screen py-4 px-4" style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` }}>
@@ -559,159 +186,69 @@ function App() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Alliance</label>
               <div className="flex gap-2">
-                <button onClick={() => setAlliance('red')} className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${alliance === 'red' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Red</button>
-                <button onClick={() => setAlliance('blue')} className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${alliance === 'blue' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Blue</button>
+                <button
+                  onClick={() => setAlliance('red')}
+                  className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${
+                    alliance === 'red' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Red
+                </button>
+                <button
+                  onClick={() => setAlliance('blue')}
+                  className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${
+                    alliance === 'blue' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Blue
+                </button>
               </div>
             </div>
 
-            {/* Start Location removed — redundant on mobile/desktop UI */}
-            {/*
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Location</label>
-              <div className="flex gap-2">
-                <button onClick={() => setStartLocation('near')} className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${startLocation === 'near' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Near</button>
-                <button onClick={() => setStartLocation('far')} className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${startLocation === 'far' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Far</button>
-              </div>
-            </div>
-            */}
-
-            {/* Add Action button - hide on mobile since picker is shown inline there */}
             {!isMobile && (
               <div className="mb-4">
-                <button onClick={() => setShowActionModal(true)} className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-md text-base md:text-lg">+ Add Action</button>
+                <button
+                  onClick={() => setShowActionModal(true)}
+                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-md text-base md:text-lg"
+                >
+                  + Add Action
+                </button>
               </div>
             )}
 
-            <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">Action Sequence</label>
-                {actionList.length > 0 && (<button onClick={clearAll} className="text-sm text-red-600 hover:text-red-800">Clear All</button>)}
-              </div>
+            <ActionSequence
+              actionList={actionList}
+              dragIndex={dragHandlers.dragIndex}
+              hoverIndex={dragHandlers.hoverIndex}
+              dragPos={dragHandlers.dragPos}
+              touchActiveRef={dragHandlers.touchActiveRef}
+              startIndex={startIndex}
+              parkIndex={parkIndex}
+              onMoveAction={moveAction}
+              onRemoveAction={removeAction}
+              onUpdateWaitTime={updateWaitTime}
+              onUpdateStartPosition={updateStartPositionNumeric}
+              onClearAll={clearAll}
+              dragHandlers={dragHandlers}
+            />
 
-              {actionList.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-8 bg-gray-50 rounded-lg">No actions added yet. Tap "Add Action" above to get started.</p>
-              ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {actionList.map((action, index) => (
-                    <div key={action.id}
-                      className={`bg-gray-50 rounded-lg p-3 transition-transform duration-150 ease-out ${hoverIndex === index ? 'border-t-2 border-indigo-400' : ''} ${index===dragIndex ? 'opacity-30 scale-95' : ''}`}
-                      draggable={!(action.configType==='start' || action.type==='near_park' || action.type==='far_park')}
-                      onDragStart={(e)=>handleDragStart(e,index)}
-                      onDragOver={(e)=>handleDragOver(e,index)}
-                      onDrop={(e)=>handleDrop(e,index)}
-                      data-action-index={index}
-                      onTouchStart={(e)=>handleTouchStart(e,index)}
-                      onPointerDown={(e)=>handlePointerDown(e,index)}
-                      onPointerMove={(e)=>handlePointerMove(e)}
-                      onPointerUp={(e)=>handlePointerUp(e)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-500 w-6">{index + 1}.</span>
-                        <span className="flex-1 text-sm font-medium text-gray-800">{getActionDisplayLabel(action)}</span>
-
-                        {action.configType === 'wait' && action.config && (
-                          <input type="number" value={action.config.waitTime} onChange={(e) => updateWaitTime(action.id, e.target.value)} placeholder="ms" className="w-16 md:w-20 px-2 py-1 text-sm border rounded" min="0" />
-                        )}
-
-                        <div className="flex gap-1">
-                          {(() => {
-                            const isStartItem = action.configType === 'start';
-                            const isParkItem = action.type === 'near_park' || action.type === 'far_park';
-                            const upDisabled = index === 0 || isParkItem || (startIndex !== -1 && index === startIndex + 1);
-                            const downDisabled = index === actionList.length - 1 || isStartItem || (parkIndex !== -1 && index === parkIndex - 1);
-                            return (
-                              <>
-                                <button onClick={() => moveAction(action.id, 'up')} disabled={upDisabled} className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30">↑</button>
-                                <button onClick={() => moveAction(action.id, 'down')} disabled={downDisabled} className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30">↓</button>
-                              </>
-                            );
-                          })()}
-                          <button onClick={() => removeAction(action.id)} className="p-1 text-red-600 hover:text-red-800">×</button>
-                        </div>
-                      </div>
-
-                      {action.configType === 'start' && action.config && action.config.positionType === 'custom' && (
-                        <div className="mt-2 ml-8">
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <label className="text-xs text-gray-600">X:</label>
-                              <input type="number" value={action.config.x ?? 0} onChange={(e) => updateStartPositionNumeric(action.id, 'x', e.target.value)} className="w-full px-2 py-1 text-xs border rounded" step="0.1" />
-                            </div>
-                            <div>
-                              <label className="text-xs text-gray-600">Y:</label>
-                              <input type="number" value={action.config.y ?? 0} onChange={(e) => updateStartPositionNumeric(action.id, 'y', e.target.value)} className="w-full px-2 py-1 text-xs border rounded" step="0.1" />
-                            </div>
-                            <div>
-                              <label className="text-xs text-gray-600">θ (deg):</label>
-                              <input type="number" value={action.config.theta ?? 0} onChange={(e) => updateStartPositionNumeric(action.id, 'theta', e.target.value)} className="w-full px-2 py-1 text-xs border rounded" step="1" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-
-                  <div className={`drop-zone h-10 ${hoverIndex===actionList.length ? 'bg-indigo-50 border-t-2 border-indigo-400' : ''}`} onDragOver={(e)=>{e.preventDefault(); handleDragOver(e, actionList.length);}} onDrop={(e)=>{handleDropAtEnd(e);}} />
-
-                  {(dragIndex !== -1 || touchActiveRef.current) && dragIndex >= 0 && actionList[dragIndex] && (
-                    <div className="pointer-events-none fixed z-50 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl px-3 py-2 text-sm font-medium" style={{ left: dragPos.x + 'px', top: dragPos.y + 'px', transition: 'transform 0.08s ease-out' }}>
-                      {getActionDisplayLabel(actionList[dragIndex])}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Mobile inline action picker panel with clearer visual separation */}
             {isMobile && (
               <div className="mt-4 border-t-2 border-gray-200 pt-4 bg-white rounded-lg shadow-md p-4">
                 <div className="mb-3">
                   <h3 className="text-lg font-bold text-gray-800">Add Action</h3>
                 </div>
-
-                 <div>
-                   {Object.entries(ACTION_GROUPS).map(([groupKey, group]) => {
-                     const childStates = group.actions.map(action => {
-                       const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
-                       const disabledStart = (groupKey === 'start') && hasStart;
-                       const disabledPark = (groupKey === 'parking') && hasPark;
-                       const disabledBecauseNoStart = !hasStart && groupKey !== 'start';
-                       const disabled = disabledPickup || disabledStart || disabledPark || disabledBecauseNoStart;
-                       return !disabled;
-                     });
-
-                     const groupHasEnabledChild = childStates.some(Boolean);
-
-                     return (
-                       <div key={groupKey} className="mb-3">
-                         <button onClick={() => groupHasEnabledChild && setExpandedGroup(expandedGroup === groupKey ? null : groupKey)} className={`w-full flex items-center justify-between p-3 ${groupHasEnabledChild ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-100 opacity-50 cursor-not-allowed'} rounded-lg transition`} aria-disabled={!groupHasEnabledChild}>
-                           <div className="flex items-center gap-2"><span className="text-xl">{group.icon}</span><span className="font-semibold text-gray-800">{group.label}</span></div>
-                           <span className="text-gray-500 text-xl">{expandedGroup === groupKey ? '−' : '+'}</span>
-                         </button>
-
-                         {expandedGroup === groupKey && (
-                           <div className="mt-2 space-y-2 pl-4">
-                             {group.actions.map(action => {
-                               const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
-                               const disabledStart = (groupKey === 'start') && hasStart;
-                               const disabledPark = (groupKey === 'parking') && hasPark;
-                               const disabledBecauseNoStart = !hasStart && groupKey !== 'start';
-                               const disabled = disabledPickup || disabledStart || disabledPark || disabledBecauseNoStart;
-                               return (
-                                 <button key={action.id} onClick={() => { if (disabled) return; addAction(action); }} className={`w-full text-left p-3 ${disabled ? 'bg-gray-50 opacity-50 cursor-not-allowed' : 'bg-white hover:bg-indigo-50'} border border-gray-200 rounded-lg transition`} aria-disabled={disabled}>
-                                   <span className="text-sm font-medium text-gray-800">{action.label}</span>
-                                 </button>
-                               );
-                             })}
-                           </div>
-                         )}
-                       </div>
-                     );
-                   })}
-                 </div>
-               </div>
-             )}
-
+                <ActionPicker
+                  actionGroups={actionGroupsHook.actionGroups}
+                  actionList={actionList}
+                  hasStart={hasStart}
+                  hasPark={hasPark}
+                  expandedGroup={expandedGroup}
+                  setExpandedGroup={setExpandedGroup}
+                  onAddAction={addAction}
+                  PICKUP_IDS={PICKUP_IDS}
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 md:space-y-6">
@@ -720,12 +257,24 @@ function App() {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">JSON Configuration</label>
-                <pre className="bg-gray-50 p-3 md:p-4 rounded-lg text-xs overflow-x-auto max-h-40 md:max-h-60 overflow-y-auto">{exportJSON()}</pre>
+                <pre className="bg-gray-50 p-3 md:p-4 rounded-lg text-xs overflow-x-auto max-h-40 md:max-h-60 overflow-y-auto">
+                  {exportJSON()}
+                </pre>
               </div>
 
               <div className="flex gap-2 mb-4">
-                <button onClick={downloadJSON} className="flex-1 py-2 px-3 md:px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition text-sm md:text-base">Download</button>
-                <button onClick={() => setShowQR(!showQR)} className="flex-1 py-2 px-3 md:px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition textsm md:text-base">{showQR ? 'Hide QR' : 'Show QR'}</button>
+                <button
+                  onClick={downloadJSON}
+                  className="flex-1 py-2 px-3 md:px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition text-sm md:text-base"
+                >
+                  Download
+                </button>
+                <button
+                  onClick={() => setShowQR(!showQR)}
+                  className="flex-1 py-2 px-3 md:px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition text-sm md:text-base"
+                >
+                  {showQR ? 'Hide QR' : 'Show QR'}
+                </button>
               </div>
 
               {showQR && (
@@ -741,8 +290,19 @@ function App() {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Save Current Configuration</label>
                 <div className="flex gap-2">
-                  <input type="text" value={presetName} onChange={(e)=>setPresetName(e.target.value)} placeholder="Preset name" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base" />
-                  <button onClick={savePreset} className="py-2 px-3 md:px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition text-sm md:text-base">Save</button>
+                  <input
+                    type="text"
+                    value={presetName}
+                    onChange={(e) => setPresetName(e.target.value)}
+                    placeholder="Preset name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
+                  />
+                  <button
+                    onClick={handleSavePreset}
+                    className="py-2 px-3 md:px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition text-sm md:text-base"
+                  >
+                    Save
+                  </button>
                 </div>
               </div>
 
@@ -755,8 +315,18 @@ function App() {
                     {presets.map(preset => (
                       <div key={preset.id} className="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
                         <span className="flex-1 text-sm font-medium text-gray-800 truncate">{preset.name}</span>
-                        <button onClick={() => loadPreset(preset)} className="py-1 px-2 md:px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm rounded transition">Load</button>
-                        <button onClick={() => deletePreset(preset.id)} className="py-1 px-2 md:px-3 bg-red-600 hover:bg-red-700 text-white text-xs md:text-sm rounded transition">Delete</button>
+                        <button
+                          onClick={() => loadPreset(preset)}
+                          className="py-1 px-2 md:px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm rounded transition"
+                        >
+                          Load
+                        </button>
+                        <button
+                          onClick={() => deletePreset(preset.id)}
+                          className="py-1 px-2 md:px-3 bg-red-600 hover:bg-red-700 text-white text-xs md:text-sm rounded transition"
+                        >
+                          Delete
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -766,61 +336,72 @@ function App() {
           </div>
         </div>
 
-        <footer className="text-center mt-6 md:mt-8 text-xs md:text-sm" style={{ color: theme.accent }}><p>FTC Team 24180 - DECODE Season Configuration Tool</p></footer>
+        <footer className="text-center mt-6 md:mt-8 text-xs md:text-sm" style={{ color: theme.accent }}>
+          <p>FTC Team 24180 - DECODE Season Configuration Tool</p>
+        </footer>
       </div>
-     
-      {/* Desktop modal only */}
+
+      {showManageActions && (
+        <ManageActionsModal
+          actionGroups={actionGroupsHook.actionGroups}
+          onClose={() => setShowManageActions(false)}
+          onExport={actionGroupsHook.exportActionGroups}
+          onRenameGroup={actionGroupsHook.renameGroup}
+          onDeleteGroup={actionGroupsHook.deleteGroup}
+          onAddActionToGroup={actionGroupsHook.addActionToGroup}
+          onUpdateActionInGroup={actionGroupsHook.updateActionInGroup}
+          onDeleteActionInGroup={actionGroupsHook.deleteActionInGroup}
+          onAddCustomGroup={actionGroupsHook.addCustomGroup}
+        />
+      )}
+
       {!isMobile && showActionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={(e)=>{ if(e.target===e.currentTarget){ setShowActionModal(false); setExpandedGroup(null); } }}>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowActionModal(false);
+              setExpandedGroup(null);
+            }
+          }}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
               <h3 className="text-lg md:text-xl font-bold text-gray-800">Add Action</h3>
-              <button onClick={()=>{ setShowActionModal(false); setExpandedGroup(null); }} className="text-gray-500 hover:text-gray-700 text-2xl leading-none">×</button>
+              <button
+                onClick={() => {
+                  setShowActionModal(false);
+                  setExpandedGroup(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              >
+                ×
+              </button>
             </div>
 
             <div className="p-4">
-              {Object.entries(ACTION_GROUPS).map(([groupKey, group]) => {
-                const childStates = group.actions.map(action => {
-                  const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
-                  const disabledStart = (groupKey === 'start') && hasStart;
-                  const disabledPark = (groupKey === 'parking') && hasPark;
-                  const disabledBecauseNoStart = !hasStart && groupKey !== 'start';
-                  const disabled = disabledPickup || disabledStart || disabledPark || disabledBecauseNoStart;
-                  return !disabled;
-                });
-
-                const groupHasEnabledChild = childStates.some(Boolean);
-
-                return (
-                  <div key={groupKey} className="mb-3">
-                    <button onClick={() => groupHasEnabledChild && setExpandedGroup(expandedGroup === groupKey ? null : groupKey)} className={`w-full flex items-center justify-between p-3 ${groupHasEnabledChild ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-100 opacity-50 cursor-not-allowed'} rounded-lg transition`} aria-disabled={!groupHasEnabledChild}>
-                      <div className="flex items-center gap-2"><span className="text-xl">{group.icon}</span><span className="font-semibold text-gray-800">{group.label}</span></div>
-                      <span className="text-gray-500 text-xl">{expandedGroup === groupKey ? '−' : '+'}</span>
-                    </button>
-
-                    {expandedGroup === groupKey && (
-                      <div className="mt-2 space-y-2 pl-4">
-                        {group.actions.map(action => {
-                          const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
-                          const disabledStart = (groupKey === 'start') && hasStart;
-                          const disabledPark = (groupKey === 'parking') && hasPark;
-                          const disabledBecauseNoStart = !hasStart && groupKey !== 'start';
-                          const disabled = disabledPickup || disabledStart || disabledPark || disabledBecauseNoStart;
-                          return (
-                            <button key={action.id} onClick={() => { if (disabled) return; addAction(action); }} className={`w-full text-left p-3 ${disabled ? 'bg-gray-50 opacity-50 cursor-not-allowed' : 'bg-white hover:bg-indigo-50'} border border-gray-200 rounded-lg transition`} aria-disabled={disabled}>
-                              <span className="text-sm font-medium text-gray-800">{action.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              <ActionPicker
+                actionGroups={actionGroupsHook.actionGroups}
+                actionList={actionList}
+                hasStart={hasStart}
+                hasPark={hasPark}
+                expandedGroup={expandedGroup}
+                setExpandedGroup={setExpandedGroup}
+                onAddAction={addAction}
+                PICKUP_IDS={PICKUP_IDS}
+              />
             </div>
           </div>
         </div>
       )}
+
+      <button
+        onClick={() => setShowManageActions(true)}
+        style={{ position: 'fixed', right: 16, bottom: 16 }}
+        className="py-2 px-3 bg-gray-800 text-white rounded-full shadow"
+      >
+        Manage Actions
+      </button>
     </div>
   );
 }
