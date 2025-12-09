@@ -73,11 +73,26 @@ function App() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState(null);
 
+  // Responsive flag: mobile if width <= 640
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 640 : true);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   // Drag state
   const [dragIndex, setDragIndex] = useState(-1);
   const [hoverIndex, setHoverIndex] = useState(-1);
   const touchActiveRef = useRef(false);
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
+
+  // Pointer-based drag state for better mobile support
+  const pointerActiveRef = useRef(false);
+  const pointerIdRef = useRef(null);
+  const pointerPendingRef = useRef(false);
+  const pointerStartRef = useRef({ x: 0, y: 0 });
+  const DRAG_START_THRESHOLD = 8; // pixels
 
   // Derived flags
   const hasStart = actionList.some(a => a.configType === 'start');
@@ -206,7 +221,9 @@ function App() {
     } else {
       setHoverIndex(actionList.length);
     }
-    e.preventDefault();
+    if (e.cancelable) {
+      try { e.preventDefault(); } catch (err) {}
+    }
   };
 
   const handleTouchEnd = (e) => {
@@ -229,6 +246,125 @@ function App() {
     window.removeEventListener('touchmove', handleTouchMove);
     window.removeEventListener('touchend', handleTouchEnd);
   };
+
+  // Pointer handlers (re-added) --------------------------------
+  const handlePointerDown = (e, index) => {
+    // Only handle touch/pen pointers (ignore mouse as desktop uses native drag)
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+    const action = actionList[index];
+    if (!action) return;
+    if (action.configType === 'start') return;
+    if (action.type === 'near_park' || action.type === 'far_park') return;
+
+    // Enter pending state; only start actual drag after threshold movement
+    pointerPendingRef.current = true;
+    pointerIdRef.current = e.pointerId;
+    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+    // store intended index to start dragging from
+    setDragIndex(index);
+    setHoverIndex(index);
+
+    // listen on window so we receive moves/up even if pointer leaves the element
+    window.addEventListener('pointermove', handlePointerMove, { passive: false });
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+
+    // do not preventDefault here so normal scrolling still works until threshold
+  };
+
+  const handlePointerMove = (e) => {
+    if (e.pointerId !== pointerIdRef.current) return;
+
+    // If we're pending, check if movement exceeded threshold to start drag
+    if (pointerPendingRef.current && !pointerActiveRef.current) {
+      const dx = e.clientX - pointerStartRef.current.x;
+      const dy = e.clientY - pointerStartRef.current.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist >= DRAG_START_THRESHOLD) {
+        // begin active drag: capture pointer and prevent scrolling via CSS
+        pointerActiveRef.current = true;
+        pointerPendingRef.current = false;
+        try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+        // lock touch-action to prevent scrolling (avoids needing preventDefault)
+        try { document.body.style.touchAction = 'none'; } catch (err) {}
+        // ensure drag visuals start at current position
+        setDragPos({ x: e.clientX, y: e.clientY });
+      } else {
+        return; // still pending, don't treat as drag
+      }
+    }
+
+    if (!pointerActiveRef.current) return;
+
+    setDragPos({ x: e.clientX, y: e.clientY });
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el) return;
+    const itemEl = el.closest('[data-action-index]');
+    if (itemEl) {
+      const idx = parseInt(itemEl.getAttribute('data-action-index'), 10);
+      setHoverIndex(idx);
+    } else {
+      setHoverIndex(actionList.length);
+    }
+    // only call preventDefault if the event is cancelable
+    if (e.cancelable) {
+      try { e.preventDefault(); } catch (err) {}
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    if (e.pointerId !== pointerIdRef.current) return;
+
+    // If we were pending (no significant move), treat as tap/cancel and cleanup
+    if (pointerPendingRef.current && !pointerActiveRef.current) {
+      pointerPendingRef.current = false;
+      pointerIdRef.current = null;
+      setDragIndex(-1);
+      setHoverIndex(-1);
+
+      // remove global listeners
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      return;
+    }
+
+    if (!pointerActiveRef.current) return;
+
+    pointerActiveRef.current = false;
+    pointerIdRef.current = null;
+
+    const from = dragIndex;
+    const to = hoverIndex === -1 ? actionList.length : hoverIndex;
+    if (isValidReorder(from, to)) {
+      const item = actionList[from];
+      const copy = actionList.filter((_, i) => i !== from);
+      let insertIndex = to;
+      if (from < to) insertIndex = to - 1;
+      copy.splice(insertIndex, 0, item);
+      setActionList(copy);
+    }
+
+    setDragIndex(-1);
+    setHoverIndex(-1);
+    setDragPos({ x: 0, y: 0 });
+
+    try { e.target.releasePointerCapture(e.pointerId); } catch (err) {}
+
+    // remove global listeners
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+    window.removeEventListener('pointercancel', handlePointerUp);
+
+    // restore touch-action
+    try { document.body.style.touchAction = ''; } catch (err) {}
+
+    // only call preventDefault if the event is cancelable
+    if (e.cancelable) {
+      try { e.preventDefault(); } catch (err) {}
+    }
+  };
+
 
   const addAction = (action) => {
     // If no start has been added yet, only allow adding start actions
@@ -338,8 +474,9 @@ function App() {
     ));
   };
 
+  // Fix: use previous state and correct arrow function syntax to avoid parse errors
   const updateStartPositionNumeric = (id, field, value) => {
-    setActionList(actionList.map(action =>
+    setActionList(prev => prev.map(action =>
       action.id === id
         ? { ...action, config: { ...action.config, [field]: parseFloat(value) || 0 } }
         : action
@@ -399,16 +536,24 @@ function App() {
   const deletePreset = (id) => { if (confirm('Are you sure you want to delete this preset?')) setPresets(presets.filter(p => p.id !== id)); };
   const clearAll = () => { if (confirm('Clear all actions?')) setActionList([]); };
 
+  // Theme colors for subtle alliance tinting
+  const theme = alliance === 'red'
+    ? { from: '#fff5f5', to: '#fff1f2', border: '#fecaca', accent: '#ef4444' } // soft red
+    : { from: '#eff6ff', to: '#eef2ff', border: '#bfdbfe', accent: '#3b82f6' }; // soft blue
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-4 px-4">
+    <div className="min-h-screen py-4 px-4" style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` }}>
       <div className="max-w-6xl mx-auto relative">
         <header className="text-center mb-6">
           <h1 className="text-3xl md:text-4xl font-bold text-indigo-900 mb-2">FTC AutoConfig</h1>
           <p className="text-sm md:text-base text-indigo-600">DECODE Season Autonomous Configuration Builder</p>
+          <div className="mx-auto mt-3" style={{ width: 96 }}>
+            <div style={{ height: 6, borderRadius: 12, background: theme.accent }} />
+          </div>
         </header>
 
         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
+          <div className="bg-white rounded-lg shadow-lg p-4 md:p-6" style={{ borderTop: `4px solid ${theme.border}` }}>
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Configuration</h2>
 
             <div className="mb-4">
@@ -419,9 +564,23 @@ function App() {
               </div>
             </div>
 
+            {/* Start Location removed — redundant on mobile/desktop UI */}
+            {/*
             <div className="mb-4">
-              <button onClick={() => setShowActionModal(true)} className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-md text-base md:text-lg">+ Add Action</button>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start Location</label>
+              <div className="flex gap-2">
+                <button onClick={() => setStartLocation('near')} className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${startLocation === 'near' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Near</button>
+                <button onClick={() => setStartLocation('far')} className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${startLocation === 'far' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Far</button>
+              </div>
             </div>
+            */}
+
+            {/* Add Action button - hide on mobile since picker is shown inline there */}
+            {!isMobile && (
+              <div className="mb-4">
+                <button onClick={() => setShowActionModal(true)} className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-md text-base md:text-lg">+ Add Action</button>
+              </div>
+            )}
 
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
@@ -442,6 +601,9 @@ function App() {
                       onDrop={(e)=>handleDrop(e,index)}
                       data-action-index={index}
                       onTouchStart={(e)=>handleTouchStart(e,index)}
+                      onPointerDown={(e)=>handlePointerDown(e,index)}
+                      onPointerMove={(e)=>handlePointerMove(e)}
+                      onPointerUp={(e)=>handlePointerUp(e)}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-gray-500 w-6">{index + 1}.</span>
@@ -499,10 +661,61 @@ function App() {
                 </div>
               )}
             </div>
+
+            {/* Mobile inline action picker panel with clearer visual separation */}
+            {isMobile && (
+              <div className="mt-4 border-t-2 border-gray-200 pt-4 bg-white rounded-lg shadow-md p-4">
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-gray-800">Add Action</h3>
+                </div>
+
+                 <div>
+                   {Object.entries(ACTION_GROUPS).map(([groupKey, group]) => {
+                     const childStates = group.actions.map(action => {
+                       const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
+                       const disabledStart = (groupKey === 'start') && hasStart;
+                       const disabledPark = (groupKey === 'parking') && hasPark;
+                       const disabledBecauseNoStart = !hasStart && groupKey !== 'start';
+                       const disabled = disabledPickup || disabledStart || disabledPark || disabledBecauseNoStart;
+                       return !disabled;
+                     });
+
+                     const groupHasEnabledChild = childStates.some(Boolean);
+
+                     return (
+                       <div key={groupKey} className="mb-3">
+                         <button onClick={() => groupHasEnabledChild && setExpandedGroup(expandedGroup === groupKey ? null : groupKey)} className={`w-full flex items-center justify-between p-3 ${groupHasEnabledChild ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-100 opacity-50 cursor-not-allowed'} rounded-lg transition`} aria-disabled={!groupHasEnabledChild}>
+                           <div className="flex items-center gap-2"><span className="text-xl">{group.icon}</span><span className="font-semibold text-gray-800">{group.label}</span></div>
+                           <span className="text-gray-500 text-xl">{expandedGroup === groupKey ? '−' : '+'}</span>
+                         </button>
+
+                         {expandedGroup === groupKey && (
+                           <div className="mt-2 space-y-2 pl-4">
+                             {group.actions.map(action => {
+                               const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
+                               const disabledStart = (groupKey === 'start') && hasStart;
+                               const disabledPark = (groupKey === 'parking') && hasPark;
+                               const disabledBecauseNoStart = !hasStart && groupKey !== 'start';
+                               const disabled = disabledPickup || disabledStart || disabledPark || disabledBecauseNoStart;
+                               return (
+                                 <button key={action.id} onClick={() => { if (disabled) return; addAction(action); }} className={`w-full text-left p-3 ${disabled ? 'bg-gray-50 opacity-50 cursor-not-allowed' : 'bg-white hover:bg-indigo-50'} border border-gray-200 rounded-lg transition`} aria-disabled={disabled}>
+                                   <span className="text-sm font-medium text-gray-800">{action.label}</span>
+                                 </button>
+                               );
+                             })}
+                           </div>
+                         )}
+                       </div>
+                     );
+                   })}
+                 </div>
+               </div>
+             )}
+
           </div>
 
           <div className="space-y-4 md:space-y-6">
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
+            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6" style={{ borderTop: `4px solid ${theme.border}` }}>
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Export</h2>
 
               <div className="mb-4">
@@ -512,7 +725,7 @@ function App() {
 
               <div className="flex gap-2 mb-4">
                 <button onClick={downloadJSON} className="flex-1 py-2 px-3 md:px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition text-sm md:text-base">Download</button>
-                <button onClick={() => setShowQR(!showQR)} className="flex-1 py-2 px-3 md:px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition text-sm md:text-base">{showQR ? 'Hide QR' : 'Show QR'}</button>
+                <button onClick={() => setShowQR(!showQR)} className="flex-1 py-2 px-3 md:px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition textsm md:text-base">{showQR ? 'Hide QR' : 'Show QR'}</button>
               </div>
 
               {showQR && (
@@ -522,7 +735,7 @@ function App() {
               )}
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
+            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6" style={{ borderTop: `4px solid ${theme.border}` }}>
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Presets</h2>
 
               <div className="mb-4">
@@ -553,10 +766,11 @@ function App() {
           </div>
         </div>
 
-        <footer className="text-center mt-6 md:mt-8 text-xs md:text-sm text-indigo-600"><p>FTC Team 24180 - DECODE Season Configuration Tool</p></footer>
+        <footer className="text-center mt-6 md:mt-8 text-xs md:text-sm" style={{ color: theme.accent }}><p>FTC Team 24180 - DECODE Season Configuration Tool</p></footer>
       </div>
-
-      {showActionModal && (
+     
+      {/* Desktop modal only */}
+      {!isMobile && showActionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={(e)=>{ if(e.target===e.currentTarget){ setShowActionModal(false); setExpandedGroup(null); } }}>
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
