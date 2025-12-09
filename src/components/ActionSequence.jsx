@@ -38,7 +38,7 @@ export function ActionSequence({
               className={`bg-gray-50 rounded-lg p-3 transition-transform duration-150 ease-out ${
                 hoverIndex === index ? 'border-t-2 border-indigo-400' : ''
               } ${index === dragIndex ? 'opacity-30 scale-95' : ''}`}
-              draggable={!(action.configType === 'start' || action.type === 'near_park' || action.type === 'far_park')}
+              draggable={true}
               onDragStart={(e) => dragHandlers.handleDragStart(e, index)}
               onDragOver={(e) => dragHandlers.handleDragOver(e, index)}
               onDrop={(e) => dragHandlers.handleDrop(e, index)}
@@ -64,32 +64,22 @@ export function ActionSequence({
                 )}
 
                 <div className="flex gap-1">
-                  {(() => {
-                    const isStartItem = action.configType === 'start';
-                    const isParkItem = action.type === 'near_park' || action.type === 'far_park';
-                    const upDisabled = index === 0 || isParkItem || (startIndex !== -1 && index === startIndex + 1);
-                    const downDisabled = index === actionList.length - 1 || isStartItem || (parkIndex !== -1 && index === parkIndex - 1);
-                    return (
-                      <>
-                        <button
-                          onClick={() => onMoveAction(action.id, 'up')}
-                          disabled={upDisabled}
-                          className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
-                          title="Move up"
-                        >
-                          &#8593;
-                        </button>
-                        <button
-                          onClick={() => onMoveAction(action.id, 'down')}
-                          disabled={downDisabled}
-                          className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
-                          title="Move down"
-                        >
-                          &#8595;
-                        </button>
-                      </>
-                    );
-                  })()}
+                  <button
+                    onClick={() => onMoveAction(action.id, 'up')}
+                    disabled={index === 0}
+                    className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
+                    title="Move up"
+                  >
+                    &#8593;
+                  </button>
+                  <button
+                    onClick={() => onMoveAction(action.id, 'down')}
+                    disabled={index === actionList.length - 1}
+                    className="p-1 text-gray-600 hover:text-indigo-600 disabled:opacity-30"
+                    title="Move down"
+                  >
+                    &#8595;
+                  </button>
                   <button 
                     onClick={() => onRemoveAction(action.id)} 
                     className="p-1 text-red-600 hover:text-red-800"
@@ -99,43 +89,6 @@ export function ActionSequence({
                   </button>
                 </div>
               </div>
-
-              {action.configType === 'start' && action.config && action.config.positionType === 'custom' && (
-                <div className="mt-2 ml-8">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="text-xs text-gray-600">X:</label>
-                      <input
-                        type="number"
-                        value={action.config.x ?? 0}
-                        onChange={(e) => onUpdateStartPosition(action.id, 'x', e.target.value)}
-                        className="w-full px-2 py-1 text-xs border rounded"
-                        step="0.1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-600">Y:</label>
-                      <input
-                        type="number"
-                        value={action.config.y ?? 0}
-                        onChange={(e) => onUpdateStartPosition(action.id, 'y', e.target.value)}
-                        className="w-full px-2 py-1 text-xs border rounded"
-                        step="0.1"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-600">&#952; (deg):</label>
-                      <input
-                        type="number"
-                        value={action.config.theta ?? 0}
-                        onChange={(e) => onUpdateStartPosition(action.id, 'theta', e.target.value)}
-                        className="w-full px-2 py-1 text-xs border rounded"
-                        step="1"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
 

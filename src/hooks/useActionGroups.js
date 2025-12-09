@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
 
 const DEFAULT_ACTION_GROUPS = {
-  start: {
-    label: 'Start Position',
-    icon: '??',
-    actions: [
-      { id: 'start_front', label: 'Front', hasConfig: true, configType: 'start', positionType: 'front' },
-      { id: 'start_back', label: 'Back', hasConfig: true, configType: 'start', positionType: 'back' },
-      { id: 'start_custom', label: 'Custom', hasConfig: true, configType: 'start', positionType: 'custom' }
-    ]
-  },
   launch: {
     label: 'Launch',
     icon: '??',
@@ -53,7 +44,15 @@ export function useActionGroups() {
   const [actionGroups, setActionGroups] = useState(() => {
     try {
       const raw = localStorage.getItem(ACTIONS_STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const loaded = JSON.parse(raw);
+        // Migration: Remove start group if it exists
+        if (loaded.start) {
+          delete loaded.start;
+          localStorage.setItem(ACTIONS_STORAGE_KEY, JSON.stringify(loaded));
+        }
+        return loaded;
+      }
     } catch (e) { /* ignore */ }
     return DEFAULT_ACTION_GROUPS;
   });
@@ -102,12 +101,13 @@ export function useActionGroups() {
     });
   };
 
-  const exportActionGroups = () => {
-    const blob = new Blob([JSON.stringify(actionGroups, null, 2)], { type: 'application/json' });
+  const exportConfig = () => {
+    const combinedConfig = { actionGroups };
+    const blob = new Blob([JSON.stringify(combinedConfig, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ftc-action-groups.json`;
+    a.download = `ftc-config.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -122,6 +122,6 @@ export function useActionGroups() {
     addActionToGroup,
     updateActionInGroup,
     deleteActionInGroup,
-    exportActionGroups
+    exportConfig
   };
 }

@@ -3,9 +3,10 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useActionGroups } from './hooks/useActionGroups';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { usePresets } from './hooks/usePresets';
+import { useStartPositions } from './hooks/useStartPositions';
 import { ActionSequence } from './components/ActionSequence';
 import { ActionPicker } from './components/ActionPicker';
-import { ManageActionsModal } from './components/ManageActionsModal';
+import { ManageConfigModal } from './components/ManageConfigModal';
 import { isValidReorder, createNewAction } from './utils/actionUtils';
 
 const PICKUP_IDS = ['spike_1', 'spike_2', 'spike_3', 'corner'];
@@ -13,6 +14,7 @@ const PICKUP_IDS = ['spike_1', 'spike_2', 'spike_3', 'corner'];
 function App() {
   const [alliance, setAlliance] = useState('red');
   const [startLocation, setStartLocation] = useState('near');
+  const [startPosition, setStartPosition] = useState({ type: 'front' }); // 'front', 'back', or { type: 'custom', x, y, theta }
   const [actionList, setActionList] = useState([]);
   const [showQR, setShowQR] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -24,7 +26,8 @@ function App() {
   
   const { presets, savePreset, deletePreset } = usePresets();
   const actionGroupsHook = useActionGroups();
-  
+  const startPositionsHook = useStartPositions();
+
   const dragHandlers = useDragAndDrop(
     actionList,
     setActionList,
@@ -52,42 +55,8 @@ function App() {
   }, []);
 
   const addAction = (action) => {
-    if (!hasStart && action.configType !== 'start') {
-      alert('Please add a Start action first.');
-      return;
-    }
-
-    if (action.configType === 'start' && hasStart) {
-      alert('Only one Start action is allowed. Please remove the existing start action first.');
-      return;
-    }
-
-    if ((action.id === 'near_park' || action.id === 'far_park') && hasPark) {
-      alert('Only one Park action is allowed. Please remove the existing park action first.');
-      return;
-    }
-
-    if (PICKUP_IDS.includes(action.id)) {
-      const exists = actionList.some(a => a.type === action.id);
-      if (exists) {
-        alert('This pickup action is already added. Duplicate pickup actions are not allowed.');
-        return;
-      }
-    }
-
     const newAction = createNewAction(action);
-
-    if (hasPark) {
-      const parkIndex = actionList.findIndex(a => a.type === 'near_park' || a.type === 'far_park');
-      setActionList(prev => {
-        const copy = [...prev];
-        copy.splice(parkIndex === -1 ? copy.length : parkIndex, 0, newAction);
-        return copy;
-      });
-    } else {
-      setActionList(prev => [...prev, newAction]);
-    }
-
+    setActionList(prev => [...prev, newAction]);
     setExpandedGroup(expandedGroup);
   };
 
@@ -100,12 +69,7 @@ function App() {
     if (index === -1) return;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= actionList.length) return;
-    const item = actionList[index];
-    const targetItem = actionList[targetIndex];
-    if (item.configType === 'start' && direction === 'down') return;
-    if ((item.type === 'near_park' || item.type === 'far_park') && direction === 'up') return;
-    if (targetItem && targetItem.configType === 'start') return;
-    if (targetItem && (targetItem.type === 'near_park' || targetItem.type === 'far_park')) return;
+    
     const newList = [...actionList];
     [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
     setActionList(newList);
@@ -127,9 +91,26 @@ function App() {
     ));
   };
 
+  const updateStartPositionField = (field, value) => {
+    setStartPosition(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+  };
+
+  const getStartPositionLabel = () => {
+    const pos = startPositionsHook.startPositions.find(p => p.id === startPosition.type);
+    if (pos) return pos.label;
+    if (startPosition.type === 'custom') {
+      const x = startPosition.x ?? 0;
+      const y = startPosition.y ?? 0;
+      const theta = startPosition.theta ?? 0;
+      return `Custom (${x}, ${y}, ${theta}°)`;
+    }
+    return 'Unknown';
+  };
+
   const getConfig = () => ({
     alliance,
     startLocation,
+    startPosition,
     actions: actionList.map(({ id, ...rest }) => rest)
   });
 
@@ -157,11 +138,30 @@ function App() {
   const loadPreset = (preset) => {
     setAlliance(preset.config.alliance);
     setStartLocation(preset.config.startLocation);
+    if (preset.config.startPosition) {
+      setStartPosition(preset.config.startPosition);
+    }
     setActionList(preset.config.actions.map(action => ({ ...action, id: crypto.randomUUID() })));
   };
 
   const clearAll = () => {
     if (confirm('Clear all actions?')) setActionList([]);
+  };
+
+  const exportConfig = () => {
+    const config = {
+      actionGroups: actionGroupsHook.actionGroups,
+      startPositions: startPositionsHook.startPositions
+    };
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ftc-config-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const theme = alliance === 'red'
@@ -202,6 +202,73 @@ function App() {
                 >
                   Blue
                 </button>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start Position</label>
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-800">{getStartPositionLabel()}</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {startPositionsHook.startPositions.map(pos => (
+                      <button
+                        key={pos.id}
+                        onClick={() => setStartPosition({ type: pos.id })}
+                        className={`px-3 py-1 text-xs rounded transition ${
+                          startPosition.type === pos.id ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {pos.label}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setStartPosition({ type: 'custom', x: 0, y: 0, theta: 0 })}
+                      className={`px-3 py-1 text-xs rounded transition ${
+                        startPosition.type === 'custom' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Custom
+                    </button>
+                  </div>
+                </div>
+
+                {startPosition.type === 'custom' && (
+                  <div className="mt-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs text-gray-600">X:</label>
+                        <input
+                          type="number"
+                          value={startPosition.x ?? 0}
+                          onChange={(e) => updateStartPositionField('x', e.target.value)}
+                          className="w-full px-2 py-1 text-xs border rounded"
+                          step="0.1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-600">Y:</label>
+                        <input
+                          type="number"
+                          value={startPosition.y ?? 0}
+                          onChange={(e) => updateStartPositionField('y', e.target.value)}
+                          className="w-full px-2 py-1 text-xs border rounded"
+                          step="0.1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-600">&#952; (deg):</label>
+                        <input
+                          type="number"
+                          value={startPosition.theta ?? 0}
+                          onChange={(e) => updateStartPositionField('theta', e.target.value)}
+                          className="w-full px-2 py-1 text-xs border rounded"
+                          step="1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -342,16 +409,20 @@ function App() {
       </div>
 
       {showManageActions && (
-        <ManageActionsModal
+        <ManageConfigModal
           actionGroups={actionGroupsHook.actionGroups}
+          startPositions={startPositionsHook.startPositions}
           onClose={() => setShowManageActions(false)}
-          onExport={actionGroupsHook.exportActionGroups}
+          onExportConfig={exportConfig}
           onRenameGroup={actionGroupsHook.renameGroup}
           onDeleteGroup={actionGroupsHook.deleteGroup}
           onAddActionToGroup={actionGroupsHook.addActionToGroup}
           onUpdateActionInGroup={actionGroupsHook.updateActionInGroup}
           onDeleteActionInGroup={actionGroupsHook.deleteActionInGroup}
           onAddCustomGroup={actionGroupsHook.addCustomGroup}
+          onAddStartPosition={startPositionsHook.addStartPosition}
+          onUpdateStartPosition={startPositionsHook.updateStartPosition}
+          onDeleteStartPosition={startPositionsHook.deleteStartPosition}
         />
       )}
 
@@ -400,7 +471,7 @@ function App() {
         style={{ position: 'fixed', right: 16, bottom: 16 }}
         className="py-2 px-3 bg-gray-800 text-white rounded-full shadow"
       >
-        Manage Actions
+        Manage Config
       </button>
     </div>
   );

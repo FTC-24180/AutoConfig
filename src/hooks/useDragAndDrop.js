@@ -65,8 +65,6 @@ export function useDragAndDrop(actionList, setActionList, isValidReorder) {
   const handleTouchStart = (e, index) => {
     const action = actionList[index];
     if (!action) return;
-    if (action.configType === 'start') return;
-    if (action.type === 'near_park' || action.type === 'far_park') return;
 
     touchActiveRef.current = true;
     setDragIndex(index);
@@ -124,8 +122,6 @@ export function useDragAndDrop(actionList, setActionList, isValidReorder) {
     if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
     const action = actionList[index];
     if (!action) return;
-    if (action.configType === 'start') return;
-    if (action.type === 'near_park' || action.type === 'far_park') return;
 
     pointerPendingRef.current = true;
     pointerIdRef.current = e.pointerId;
