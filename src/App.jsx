@@ -1,48 +1,57 @@
 import { useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import { useActionGroups } from './hooks/useActionGroups';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { usePresets } from './hooks/usePresets';
 import { useStartPositions } from './hooks/useStartPositions';
-import { ActionSequence } from './components/ActionSequence';
-import { ActionPicker } from './components/ActionPicker';
+import { useMatches } from './hooks/useMatches';
+import { HamburgerMenu } from './components/HamburgerMenu';
+import { WizardContainer } from './components/WizardContainer';
+import { WizardNavigation } from './components/WizardNavigation';
 import { ManageConfigModal } from './components/ManageConfigModal';
+import { MatchManager } from './components/MatchManager';
+import { Step1Match } from './components/steps/Step1Match';
+import { Step2Partner } from './components/steps/Step2Partner';
+import { Step3Alliance } from './components/steps/Step3Alliance';
+import { Step4StartPosition } from './components/steps/Step4StartPosition';
+import { Step5Actions } from './components/steps/Step5Actions';
+import { Step6QRCode } from './components/steps/Step6QRCode';
 import { isValidReorder, createNewAction } from './utils/actionUtils';
 
-const PICKUP_IDS = ['spike_1', 'spike_2', 'spike_3', 'corner'];
-
 function App() {
-  const [alliance, setAlliance] = useState('red');
-  const [startLocation, setStartLocation] = useState('near');
-  const [startPosition, setStartPosition] = useState({ type: 'front' }); // 'front', 'back', or { type: 'custom', x, y, theta }
-  const [actionList, setActionList] = useState([]);
-  const [showQR, setShowQR] = useState(false);
-  const [showActionModal, setShowActionModal] = useState(false);
-  const [showManageActions, setShowManageActions] = useState(false);
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState(0);
   const [expandedGroup, setExpandedGroup] = useState(null);
-  const [presetName, setPresetName] = useState('');
 
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 640 : true);
-  
+  // Modal state
+  const [showManageActions, setShowManageActions] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [showMatchManager, setShowMatchManager] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+
+  // Hooks
   const { presets, savePreset, deletePreset } = usePresets();
   const actionGroupsHook = useActionGroups();
   const startPositionsHook = useStartPositions();
+  const matchesHook = useMatches();
+
+  // Get current match data
+  const currentMatch = matchesHook.getCurrentMatch() || {
+    matchNumber: 1,
+    partnerTeam: '',
+    alliance: 'red',
+    startPosition: { type: 'front' },
+    actions: []
+  };
 
   const dragHandlers = useDragAndDrop(
-    actionList,
-    setActionList,
-    (from, to) => isValidReorder(actionList, from, to)
+    currentMatch.actions || [],
+    (newActions) => {
+      if (matchesHook.currentMatchId) {
+        matchesHook.updateMatch(matchesHook.currentMatchId, { actions: newActions });
+      }
+    },
+    (from, to) => isValidReorder(currentMatch.actions || [], from, to)
   );
-
-  // Derived flags - no longer needed but kept for compatibility
-  const startIndex = -1;
-  const parkIndex = -1;
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 640);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -52,59 +61,63 @@ function App() {
     }
   }, []);
 
+  // Create first match if none exist
+  useEffect(() => {
+    if (matchesHook.matches.length === 0) {
+      matchesHook.addMatch();
+    }
+  }, []);
+
+  const updateCurrentMatch = (updates) => {
+    if (matchesHook.currentMatchId) {
+      matchesHook.updateMatch(matchesHook.currentMatchId, updates);
+    }
+  };
+
   const addAction = (action) => {
     const newAction = createNewAction(action);
-    setActionList(prev => [...prev, newAction]);
-    setExpandedGroup(expandedGroup);
+    const updatedActions = [...(currentMatch.actions || []), newAction];
+    updateCurrentMatch({ actions: updatedActions });
   };
 
   const removeAction = (id) => {
-    setActionList(actionList.filter(action => action.id !== id));
+    const updatedActions = (currentMatch.actions || []).filter(action => action.id !== id);
+    updateCurrentMatch({ actions: updatedActions });
   };
 
   const moveAction = (id, direction) => {
-    const index = actionList.findIndex(action => action.id === id);
+    const actions = currentMatch.actions || [];
+    const index = actions.findIndex(action => action.id === id);
     if (index === -1) return;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= actionList.length) return;
+    if (targetIndex < 0 || targetIndex >= actions.length) return;
     
-    const newList = [...actionList];
+    const newList = [...actions];
     [newList[index], newList[targetIndex]] = [newList[targetIndex], newList[index]];
-    setActionList(newList);
+    updateCurrentMatch({ actions: newList });
   };
 
   const updateActionConfig = (id, key, value) => {
-    setActionList(prev => prev.map(action =>
+    const updatedActions = (currentMatch.actions || []).map(action =>
       action.id === id
         ? { ...action, config: { ...action.config, [key]: value } }
         : action
-    ));
+    );
+    updateCurrentMatch({ actions: updatedActions });
+  };
+
+  const clearAll = () => {
+    if (confirm('Clear all actions?')) {
+      updateCurrentMatch({ actions: [] });
+    }
   };
 
   const updateStartPositionField = (field, value) => {
-    setStartPosition(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    const newStartPosition = { ...currentMatch.startPosition, [field]: parseFloat(value) || 0 };
+    updateCurrentMatch({ startPosition: newStartPosition });
   };
 
-  const getStartPositionLabel = () => {
-    const pos = startPositionsHook.startPositions.find(p => p.id === startPosition.type);
-    if (pos) return pos.label;
-    if (startPosition.type === 'custom') {
-      const x = startPosition.x ?? 0;
-      const y = startPosition.y ?? 0;
-      const theta = startPosition.theta ?? 0;
-      return `Custom (${x}, ${y}, ${theta}°)`;
-    }
-    return 'Unknown';
-  };
-
-  const getConfig = () => ({
-    alliance,
-    startLocation,
-    startPosition,
-    actions: actionList.map(({ id, label, ...rest }) => rest)
-  });
-
-  const exportJSON = () => JSON.stringify(getConfig(), null, 2);
+  const getConfig = () => matchesHook.exportAllMatches();
 
   const downloadJSON = () => {
     const config = getConfig();
@@ -112,42 +125,50 @@ function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ftc-auto-${alliance}-${startLocation}-${Date.now()}.json`;
+    a.download = `ftc-auto-all-matches-${Date.now()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  const handleSavePreset = () => {
-    if (savePreset(presetName, getConfig())) {
-      setPresetName('');
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) {
+      alert('Please enter a template name');
+      return;
+    }
+    if (savePreset(templateName, getConfig())) {
+      setTemplateName('');
+      setShowSaveTemplate(false);
     }
   };
 
   const loadPreset = (preset) => {
-    setAlliance(preset.config.alliance);
-    setStartLocation(preset.config.startLocation);
-    if (preset.config.startPosition) {
-      setStartPosition(preset.config.startPosition);
+    if (preset.config.matches) {
+      // New format - multiple matches
+      matchesHook.importMatches(preset.config);
+    } else {
+      // Old format - single match
+      const matchId = matchesHook.addMatch();
+      matchesHook.updateMatch(matchId, {
+        matchNumber: preset.config.matchNumber || 1,
+        partnerTeam: preset.config.partnerTeam || '',
+        alliance: preset.config.alliance || 'red',
+        startPosition: preset.config.startPosition || { type: 'front' },
+        actions: preset.config.actions?.map(action => {
+          let label = action.type;
+          for (const group of Object.values(actionGroupsHook.actionGroups)) {
+            const matchingAction = group.actions.find(a => a.id === action.type);
+            if (matchingAction) {
+              label = matchingAction.label;
+              break;
+            }
+          }
+          return { ...action, id: crypto.randomUUID(), label };
+        }) || []
+      });
+      matchesHook.setCurrentMatchId(matchId);
     }
-    // Restore labels from action groups based on action type
-    setActionList(preset.config.actions.map(action => {
-      // Find the label from action groups
-      let label = action.type; // fallback to type if not found
-      for (const group of Object.values(actionGroupsHook.actionGroups)) {
-        const matchingAction = group.actions.find(a => a.id === action.type);
-        if (matchingAction) {
-          label = matchingAction.label;
-          break;
-        }
-      }
-      return { ...action, id: crypto.randomUUID(), label };
-    }));
-  };
-
-  const clearAll = () => {
-    if (confirm('Clear all actions?')) setActionList([]);
   };
 
   const exportConfig = () => {
@@ -166,252 +187,169 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  const theme = alliance === 'red'
-    ? { from: '#fff5f5', to: '#fff1f2', border: '#fecaca', accent: '#ef4444' }
-    : { from: '#eff6ff', to: '#eef2ff', border: '#bfdbfe', accent: '#3b82f6' };
+  const canGoNext = () => {
+    switch (currentStep) {
+      case 0: return currentMatch.matchNumber > 0;
+      case 1: return true; // Partner is optional
+      case 2: return currentMatch.alliance !== '';
+      case 3: return currentMatch.startPosition?.type !== '';
+      case 4: return true; // Actions are optional but recommended
+      case 5: return true;
+      default: return true;
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep < 5) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleAddMatch = () => {
+    const newMatchId = matchesHook.addMatch();
+    setCurrentStep(0); // Reset to first step for new match
+  };
+
+  const handleSelectMatch = (matchId) => {
+    matchesHook.setCurrentMatchId(matchId);
+    setShowMatchManager(false);
+  };
+
+  const handleDuplicateMatch = (matchId) => {
+    const newMatchId = matchesHook.duplicateMatch(matchId);
+    if (newMatchId) {
+      matchesHook.setCurrentMatchId(newMatchId);
+    }
+  };
+
+  const theme = currentMatch.alliance === 'red'
+    ? { from: '#fff5f5', to: '#fff1f2', accent: '#ef4444' }
+    : { from: '#eff6ff', to: '#eef2ff', accent: '#3b82f6' };
 
   return (
-    <div className="min-h-screen py-4 px-4" style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` }}>
-      <div className="max-w-6xl mx-auto relative">
-        <header className="text-center mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-indigo-900 mb-2">FTC AutoConfig</h1>
-          <p className="text-sm md:text-base text-indigo-600">DECODE Season Autonomous Configuration Builder</p>
-          <div className="mx-auto mt-3" style={{ width: 96 }}>
-            <div style={{ height: 6, borderRadius: 12, background: theme.accent }} />
+    <div 
+      className="h-screen flex flex-col overflow-hidden touch-manipulation"
+      style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` }}
+    >
+      {/* Compact Mobile Header */}
+      <header className="bg-white shadow-sm flex-shrink-0 safe-top">
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <button
+            onClick={() => setShowMatchManager(true)}
+            className="flex items-center gap-1.5 py-2 px-2.5 bg-indigo-600 active:bg-indigo-700 text-white rounded-lg font-semibold text-sm min-h-[44px] touch-manipulation"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span className="bg-white text-indigo-600 px-1.5 py-0.5 rounded-full text-xs font-bold min-w-[20px] text-center">
+              {matchesHook.matches.length}
+            </span>
+          </button>
+          <div className="flex-1 text-center mx-2">
+            <h1 className="text-lg font-bold text-indigo-900 leading-tight">
+              FTC AutoConfig
+            </h1>
+            <p className="text-xs text-indigo-600 leading-none">
+              Match #{currentMatch.matchNumber}
+            </p>
           </div>
-        </header>
-
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          <div className="bg-white rounded-lg shadow-lg p-4 md:p-6" style={{ borderTop: `4px solid ${theme.border}` }}>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Configuration</h2>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Alliance</label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setAlliance('red')}
-                  className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${
-                    alliance === 'red' ? 'bg-red-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Red
-                </button>
-                <button
-                  onClick={() => setAlliance('blue')}
-                  className={`flex-1 py-2 md:py-3 px-3 md:px-4 rounded-lg font-semibold transition text-sm md:text-base ${
-                    alliance === 'blue' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Blue
-                </button>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Position</label>
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-800">{getStartPositionLabel()}</span>
-                  <div className="flex gap-1 flex-wrap">
-                    {startPositionsHook.startPositions.map(pos => (
-                      <button
-                        key={pos.id}
-                        onClick={() => setStartPosition({ type: pos.id })}
-                        className={`px-3 py-1 text-xs rounded transition ${
-                          startPosition.type === pos.id ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        {pos.label}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setStartPosition({ type: 'custom', x: 0, y: 0, theta: 0 })}
-                      className={`px-3 py-1 text-xs rounded transition ${
-                        startPosition.type === 'custom' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      Custom
-                    </button>
-                  </div>
-                </div>
-
-                {startPosition.type === 'custom' && (
-                  <div className="mt-2">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="text-xs text-gray-600">X:</label>
-                        <input
-                          type="number"
-                          value={startPosition.x ?? 0}
-                          onChange={(e) => updateStartPositionField('x', e.target.value)}
-                          className="w-full px-2 py-1 text-xs border rounded"
-                          step="0.1"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-600">Y:</label>
-                        <input
-                          type="number"
-                          value={startPosition.y ?? 0}
-                          onChange={(e) => updateStartPositionField('y', e.target.value)}
-                          className="w-full px-2 py-1 text-xs border rounded"
-                          step="0.1"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-600">&#952; (deg):</label>
-                        <input
-                          type="number"
-                          value={startPosition.theta ?? 0}
-                          onChange={(e) => updateStartPositionField('theta', e.target.value)}
-                          className="w-full px-2 py-1 text-xs border rounded"
-                          step="1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {!isMobile && (
-              <div className="mb-4">
-                <button
-                  onClick={() => setShowActionModal(true)}
-                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition shadow-md text-base md:text-lg"
-                >
-                  + Add Action
-                </button>
-              </div>
-            )}
-
-            <ActionSequence
-              actionList={actionList}
-              dragIndex={dragHandlers.dragIndex}
-              hoverIndex={dragHandlers.hoverIndex}
-              dragPos={dragHandlers.dragPos}
-              touchActiveRef={dragHandlers.touchActiveRef}
-              startIndex={startIndex}
-              parkIndex={parkIndex}
-              onMoveAction={moveAction}
-              onRemoveAction={removeAction}
-              onUpdateActionConfig={updateActionConfig}
-              onClearAll={clearAll}
-              dragHandlers={dragHandlers}
-            />
-
-            {isMobile && (
-              <div className="mt-4 border-t-2 border-gray-200 pt-4 bg-white rounded-lg shadow-md p-4">
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold text-gray-800">Add Action</h3>
-                </div>
-                <ActionPicker
-                  actionGroups={actionGroupsHook.actionGroups}
-                  actionList={actionList}
-                  expandedGroup={expandedGroup}
-                  setExpandedGroup={setExpandedGroup}
-                  onAddAction={addAction}
-                  PICKUP_IDS={PICKUP_IDS}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-4 md:space-y-6">
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6" style={{ borderTop: `4px solid ${theme.border}` }}>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Export</h2>
-
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">JSON Configuration</label>
-                  <span className="text-xs text-gray-500">
-                    {new Blob([exportJSON()]).size} bytes
-                  </span>
-                </div>
-                <pre className="bg-gray-50 p-3 md:p-4 rounded-lg text-xs overflow-x-auto max-h-40 md:max-h-60 overflow-y-auto">
-                  {exportJSON()}
-                </pre>
-              </div>
-
-              <div className="flex gap-2 mb-4">
-                <button
-                  onClick={downloadJSON}
-                  className="flex-1 py-2 px-3 md:px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition text-sm md:text-base"
-                >
-                  Download
-                </button>
-                <button
-                  onClick={() => setShowQR(!showQR)}
-                  className="flex-1 py-2 px-3 md:px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition text-sm md:text-base"
-                >
-                  {showQR ? 'Hide QR' : 'Show QR'}
-                </button>
-              </div>
-
-              {showQR && (
-                <div className="bg-white p-4 rounded-lg border-2 border-gray-200 flex justify-center">
-                  <QRCodeSVG value={exportJSON()} size={Math.min(256, window.innerWidth - 100)} level="M" includeMargin={true} />
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6" style={{ borderTop: `4px solid ${theme.border}` }}>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Presets</h2>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Save Current Configuration</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={presetName}
-                    onChange={(e) => setPresetName(e.target.value)}
-                    placeholder="Preset name"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
-                  />
-                  <button
-                    onClick={handleSavePreset}
-                    className="py-2 px-3 md:px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition text-sm md:text-base"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Saved Presets</label>
-                {presets.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4 bg-gray-50 rounded-lg">No presets saved yet</p>
-                ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {presets.map(preset => (
-                      <div key={preset.id} className="bg-gray-50 rounded-lg p-3 flex items-center gap-2">
-                        <span className="flex-1 text-sm font-medium text-gray-800 truncate">{preset.name}</span>
-                        <button
-                          onClick={() => loadPreset(preset)}
-                          className="py-1 px-2 md:px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs md:text-sm rounded transition"
-                        >
-                          Load
-                        </button>
-                        <button
-                          onClick={() => deletePreset(preset.id)}
-                          className="py-1 px-2 md:px-3 bg-red-600 hover:bg-red-700 text-white text-xs md:text-sm rounded transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <div className="w-[72px]"></div>
         </div>
+      </header>
 
-        <footer className="text-center mt-6 md:mt-8 text-xs md:text-sm" style={{ color: theme.accent }}>
-          <p>FTC Team 24180 - DECODE Season Configuration Tool</p>
-        </footer>
+      {/* Hamburger Menu */}
+      <HamburgerMenu
+        onConfigureActions={() => setShowManageActions(true)}
+        onExportJSON={downloadJSON}
+        onSaveTemplate={() => setShowSaveTemplate(true)}
+        onLoadTemplate={() => {}}
+        presets={presets}
+        onLoadPreset={loadPreset}
+        onDeletePreset={deletePreset}
+      />
+
+      {/* Main Content - Full Screen Wizard */}
+      <div className="flex-1 overflow-hidden">
+        <WizardContainer currentStep={currentStep} onStepChange={setCurrentStep}>
+          <Step1Match
+            matchNumber={currentMatch.matchNumber}
+            onMatchNumberChange={(num) => updateCurrentMatch({ matchNumber: num })}
+          />
+          <Step2Partner
+            partnerTeam={currentMatch.partnerTeam}
+            onPartnerTeamChange={(team) => updateCurrentMatch({ partnerTeam: team })}
+          />
+          <Step3Alliance
+            alliance={currentMatch.alliance}
+            onAllianceChange={(alliance) => updateCurrentMatch({ alliance })}
+          />
+          <Step4StartPosition
+            startPosition={currentMatch.startPosition}
+            onStartPositionChange={(pos) => updateCurrentMatch({ startPosition: pos })}
+            startPositions={startPositionsHook.startPositions}
+            onUpdateField={updateStartPositionField}
+          />
+          <Step5Actions
+            actionList={currentMatch.actions || []}
+            actionGroups={actionGroupsHook.actionGroups}
+            expandedGroup={expandedGroup}
+            setExpandedGroup={setExpandedGroup}
+            onAddAction={addAction}
+            onMoveAction={moveAction}
+            onRemoveAction={removeAction}
+            onUpdateActionConfig={updateActionConfig}
+            onClearAll={clearAll}
+            dragHandlers={dragHandlers}
+          />
+          <Step6QRCode
+            config={getConfig()}
+            onDownload={downloadJSON}
+          />
+        </WizardContainer>
       </div>
 
+      {/* Compact Bottom Navigation */}
+      <WizardNavigation
+        currentStep={currentStep}
+        totalSteps={6}
+        onNext={handleNext}
+        onPrev={handlePrev}
+        canGoNext={canGoNext()}
+        nextLabel={currentStep === 5 ? 'Finish' : 'Next'}
+      />
+
+      {/* Full Screen Match Manager Modal */}
+      {showMatchManager && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden safe-area">
+          <div className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-3 flex justify-between items-center safe-top">
+            <h3 className="text-lg font-bold text-gray-800">Match Manager</h3>
+            <button
+              onClick={() => setShowMatchManager(false)}
+              className="text-gray-500 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
+            >
+              ×
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            <MatchManager
+              matches={matchesHook.matches}
+              currentMatchId={matchesHook.currentMatchId}
+              onSelectMatch={handleSelectMatch}
+              onAddMatch={handleAddMatch}
+              onDeleteMatch={matchesHook.deleteMatch}
+              onDuplicateMatch={handleDuplicateMatch}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Manage Actions Modal */}
       {showManageActions && (
         <ManageConfigModal
           actionGroups={actionGroupsHook.actionGroups}
@@ -430,51 +368,59 @@ function App() {
         />
       )}
 
-      {!isMobile && showActionModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowActionModal(false);
-              setExpandedGroup(null);
-            }
-          }}
-        >
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-              <h3 className="text-lg md:text-xl font-bold text-gray-800">Add Action</h3>
+      {/* Full Screen Save Template Modal */}
+      {showSaveTemplate && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden safe-area">
+          <div className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-3 flex justify-between items-center safe-top">
+            <h3 className="text-lg font-bold text-gray-800">Save as Template</h3>
+            <button
+              onClick={() => {
+                setShowSaveTemplate(false);
+                setTemplateName('');
+              }}
+              className="text-gray-500 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
+            >
+              ×
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="mb-4">
+              <label className="block text-base font-medium text-gray-700 mb-3">
+                Template Name
+              </label>
+              <input
+                type="text"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Enter template name"
+                className="w-full text-lg px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[48px] touch-manipulation"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleSaveTemplate();
+                }}
+              />
+            </div>
+          </div>
+          <div className="flex-shrink-0 p-3 bg-white border-t border-gray-200 safe-bottom">
+            <div className="flex gap-3">
               <button
                 onClick={() => {
-                  setShowActionModal(false);
-                  setExpandedGroup(null);
+                  setShowSaveTemplate(false);
+                  setTemplateName('');
                 }}
-                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                className="flex-1 py-3 px-4 bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-semibold text-lg min-h-[48px] touch-manipulation"
               >
-                ×
+                Cancel
               </button>
-            </div>
-
-            <div className="p-4">
-              <ActionPicker
-                actionGroups={actionGroupsHook.actionGroups}
-                actionList={actionList}
-                expandedGroup={expandedGroup}
-                setExpandedGroup={setExpandedGroup}
-                onAddAction={addAction}
-                PICKUP_IDS={PICKUP_IDS}
-              />
+              <button
+                onClick={handleSaveTemplate}
+                className="flex-1 py-3 px-4 bg-indigo-600 active:bg-indigo-700 text-white rounded-lg font-semibold text-lg min-h-[48px] touch-manipulation"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      <button
-        onClick={() => setShowManageActions(true)}
-        style={{ position: 'fixed', right: 16, bottom: 16 }}
-        className="py-2 px-3 bg-gray-800 text-white rounded-full shadow"
-      >
-        Manage Config
-      </button>
     </div>
   );
 }
