@@ -62,7 +62,10 @@ export function StartPositionsConfigContent({
         {startPositions.map((pos, idx) => (
           <div key={pos.id + idx} className="border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 p-2 rounded">
             <div className="flex gap-2 items-center mb-2">
-              <span className="text-base flex-shrink-0">??</span>
+              <svg className="w-4 h-4 text-gray-700 dark:text-gray-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
               <div className="flex-1 min-w-0 space-y-2">
                 <input
                   value={pos.id}
