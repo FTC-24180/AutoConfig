@@ -212,6 +212,11 @@ function App() {
     setCurrentStep(0); // Reset to first step when switching matches
   };
 
+  const handleSelectMatchFromQRCode = (matchId) => {
+    // Switch match without changing the current step
+    matchesHook.setCurrentMatchId(matchId);
+  };
+
   const handleDuplicateMatch = (matchId) => {
     const newMatchId = matchesHook.duplicateMatch(matchId);
     if (newMatchId) {
@@ -504,6 +509,9 @@ function App() {
           <Step6QRCode
             config={getConfig()}
             onDownload={downloadJSON}
+            matches={matchesHook.matches}
+            currentMatchId={matchesHook.currentMatchId}
+            onSelectMatch={handleSelectMatchFromQRCode}
           />
         </WizardContainer>
       </div>

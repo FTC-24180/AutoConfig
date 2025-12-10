@@ -229,7 +229,6 @@ export function HamburgerMenu({
                                 {match.partnerTeam ? `Partner: ${match.partnerTeam}` : 'No partner'}
                                 {' • '}
                                 {match.actions?.length || 0} action{match.actions?.length !== 1 ? 's' : ''}
-
                               </div>
                             </div>
                             <div className="flex gap-1 ml-2">
@@ -262,7 +261,7 @@ export function HamburgerMenu({
                             </div>
                           </div>
                         </div>
-                      ))},
+                      ))}
                     </div>
                   ) : (
                     <div className="text-center py-6 bg-gray-50 dark:bg-slate-800 rounded-lg">
