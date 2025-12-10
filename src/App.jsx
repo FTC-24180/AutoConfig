@@ -4,6 +4,7 @@ import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { usePresets } from './hooks/usePresets';
 import { useStartPositions } from './hooks/useStartPositions';
 import { useMatches } from './hooks/useMatches';
+import { useThemePreference } from './hooks/useThemePreference';
 import { HamburgerMenu } from './components/HamburgerMenu';
 import { WizardContainer } from './components/WizardContainer';
 import { WizardNavigation } from './components/WizardNavigation';
@@ -29,6 +30,9 @@ function App() {
   const actionGroupsHook = useActionGroups();
   const startPositionsHook = useStartPositions();
   const matchesHook = useMatches();
+  const { preference: themePreference, setPreference: setThemePreference, resolvedTheme } = useThemePreference();
+
+  const isDarkTheme = resolvedTheme === 'dark';
 
   // Get current match data
   const currentMatch = matchesHook.getCurrentMatch();
@@ -214,20 +218,24 @@ function App() {
   };
 
   const theme = currentMatch?.alliance === 'red'
-    ? { from: '#fff5f5', to: '#fff1f2', accent: '#ef4444' }
-    : { from: '#eff6ff', to: '#eef2ff', accent: '#3b82f6' };
+    ? isDarkTheme
+      ? { from: '#3f1d1d', to: '#111827', accent: '#f87171' }
+      : { from: '#fff5f5', to: '#fff1f2', accent: '#ef4444' }
+    : isDarkTheme
+      ? { from: '#0f172a', to: '#020617', accent: '#60a5fa' }
+      : { from: '#eff6ff', to: '#eef2ff', accent: '#3b82f6' };
 
   // Show welcome screen if no matches exist
   if (matchesHook.matches.length === 0) {
     return (
-      <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-indigo-50 to-blue-50">
-        <header className="bg-white shadow-lg flex-shrink-0 safe-top border-b border-gray-200">
+      <div className={`h-screen flex flex-col overflow-hidden ${isDarkTheme ? 'bg-gradient-to-br from-slate-900 to-slate-950' : 'bg-gradient-to-br from-indigo-50 to-blue-50'}`}>
+        <header className="bg-white dark:bg-slate-900 shadow-lg flex-shrink-0 safe-top border-b border-gray-200 dark:border-slate-800">
           <div className="flex items-center justify-center px-3 py-2.5">
             <div className="text-center">
-              <h1 className="text-lg font-bold text-gray-800 leading-tight">
+              <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight">
                 FTC AutoConfig
               </h1>
-              <p className="text-xs text-indigo-600 leading-none">
+              <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-none">
                 Autonomous Match Configuration
               </p>
             </div>
@@ -248,21 +256,24 @@ function App() {
           presets={presets}
           onLoadPreset={loadPreset}
           onDeletePreset={deletePreset}
+          themePreference={themePreference}
+          resolvedTheme={resolvedTheme}
+          onThemeChange={setThemePreference}
         />
 
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md w-full text-center space-y-6">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-slate-800">
               <div className="mb-6">
                 <div className="w-20 h-20 bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                   Welcome to FTC AutoConfig
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   Configure your autonomous routines for FTC matches
                 </p>
               </div>
@@ -274,20 +285,20 @@ function App() {
                 Create Your First Match
               </button>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-3">Or get started with:</p>
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-800">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">Or get started with:</p>
                 <div className="space-y-2">
                   {presets.length > 0 && (
                     <button
                       onClick={() => setShowSaveTemplate(true)}
-                      className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
+                      className="w-full py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
                     >
                       📄 Load a Template
                     </button>
                   )}
                   <button
                     onClick={() => setShowManageActions(true)}
-                    className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
+                    className="w-full py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
                   >
                     ⚙️ Configure Actions
                   </button>
@@ -295,12 +306,12 @@ function App() {
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+            <div className="bg-blue-50 dark:bg-slate-800/70 border border-blue-200 dark:border-slate-700 rounded-lg p-4 text-left">
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <div className="text-sm text-blue-800">
+                <div className="text-sm text-blue-800 dark:text-blue-100">
                   <strong className="font-semibold">Quick Start:</strong> Create a match, configure your starting position and actions, then scan the QR code with your robot.
                 </div>
               </div>
@@ -328,12 +339,12 @@ function App() {
         )}
 
         {showSaveTemplate && (
-          <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden safe-area">
-            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-3 flex justify-between items-center safe-top">
-              <h3 className="text-lg font-bold text-gray-800">Load Template</h3>
+          <div className="fixed inset-0 bg-white dark:bg-slate-950 z-50 flex flex-col overflow-hidden safe-area">
+            <div className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-3 py-3 flex justify-between items-center safe-top">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Load Template</h3>
               <button
                 onClick={() => setShowSaveTemplate(false)}
-                className="text-gray-600 hover:text-gray-700 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-700 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
               >
                 ×
               </button>
@@ -341,10 +352,10 @@ function App() {
             <div className="flex-1 overflow-y-auto p-4">
               {presets.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">No templates saved yet</p>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">No templates saved yet</p>
                   <button
                     onClick={() => setShowSaveTemplate(false)}
-                    className="py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg"
+                    className="py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 text-gray-700 dark:text-gray-100 rounded-lg"
                   >
                     Close
                   </button>
@@ -352,9 +363,9 @@ function App() {
               ) : (
                 <div className="space-y-2">
                   {presets.map(preset => (
-                    <div key={preset.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                    <div key={preset.id} className="bg-white dark:bg-slate-900 rounded-lg p-3 border border-gray-200 dark:border-slate-800">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-700 text-sm">{preset.name}</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-200 text-sm">{preset.name}</span>
                       </div>
                       <button
                         onClick={() => {
@@ -383,13 +394,13 @@ function App() {
       style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` }}
     >
       {/* Compact Mobile Header */}
-      <header className="bg-white shadow-lg flex-shrink-0 safe-top border-b border-gray-200">
+      <header className="bg-white dark:bg-slate-900 shadow-lg flex-shrink-0 safe-top border-b border-gray-200 dark:border-slate-800">
         <div className="flex items-center justify-center px-3 py-2.5">
           <div className="text-center">
-            <h1 className="text-lg font-bold text-gray-800 leading-tight">
+            <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight">
               FTC AutoConfig
             </h1>
-            <p className="text-xs text-indigo-600 leading-none">
+            <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-none">
               Match #{currentMatch?.matchNumber || '?'} • {currentMatch?.alliance === 'red' ? '🔴' : '🔵'} {currentMatch?.alliance?.toUpperCase() || 'NONE'}
             </p>
           </div>
@@ -411,6 +422,9 @@ function App() {
         presets={presets}
         onLoadPreset={loadPreset}
         onDeletePreset={deletePreset}
+        themePreference={themePreference}
+        resolvedTheme={resolvedTheme}
+        onThemeChange={setThemePreference}
       />
 
       {/* Main Content - Full Screen Wizard */}
@@ -480,22 +494,22 @@ function App() {
 
       {/* Full Screen Save Template Modal */}
       {showSaveTemplate && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden safe-area">
-          <div className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-3 flex justify-between items-center safe-top">
-            <h3 className="text-lg font-bold text-gray-800">Save as Template</h3>
+        <div className="fixed inset-0 bg-white dark:bg-slate-950 z-50 flex flex-col overflow-hidden safe-area">
+          <div className="flex-shrink-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-3 py-3 flex justify-between items-center safe-top">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Save as Template</h3>
             <button
               onClick={() => {
                 setShowSaveTemplate(false);
                 setTemplateName('');
               }}
-              className="text-gray-500 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
+              className="text-gray-500 dark:text-gray-300 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
             >
               ×
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="mb-4">
-              <label className="block text-base font-medium text-gray-700 mb-3">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-3">
                 Template Name
               </label>
               <input
@@ -503,21 +517,21 @@ function App() {
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="Enter template name"
-                className="w-full text-lg px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[48px] touch-manipulation"
+                className="w-full text-lg px-4 py-3 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[48px] touch-manipulation"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') handleSaveTemplate();
                 }}
               />
             </div>
           </div>
-          <div className="flex-shrink-0 p-3 bg-white border-t border-gray-200 safe-bottom">
+          <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 safe-bottom">
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowSaveTemplate(false);
                   setTemplateName('');
                 }}
-                className="flex-1 py-3 px-4 bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-semibold text-lg min-h-[48px] touch-manipulation"
+                className="flex-1 py-3 px-4 bg-gray-200 dark:bg-slate-800 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-semibold text-lg min-h-[48px] touch-manipulation"
               >
                 Cancel
               </button>

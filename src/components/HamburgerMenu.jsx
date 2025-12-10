@@ -1,5 +1,11 @@
 import { useState } from 'react';
 
+const THEME_OPTIONS = [
+  { id: 'system', label: 'System', emoji: '???' },
+  { id: 'light', label: 'Light', emoji: '??' },
+  { id: 'dark', label: 'Dark', emoji: '??' },
+];
+
 export function HamburgerMenu({ 
   matches,
   currentMatchId,
@@ -13,7 +19,10 @@ export function HamburgerMenu({
   onLoadTemplate,
   presets,
   onLoadPreset,
-  onDeletePreset
+  onDeletePreset,
+  themePreference = 'system',
+  resolvedTheme = 'light',
+  onThemeChange = () => {}
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -63,24 +72,26 @@ export function HamburgerMenu({
           // Reload the page to reinitialize with defaults
           window.location.reload();
         } catch (error) {
-          alert('? Error clearing data: ' + error.message);
+          alert('?? Error clearing data: ' + error.message);
         }
       }
     }
   };
+
+  const resolvedThemeLabel = resolvedTheme.charAt(0).toUpperCase() + resolvedTheme.slice(1);
 
   return (
     <>
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-4 z-50 p-3 bg-white rounded-lg shadow-lg hover:bg-gray-50 active:bg-gray-100 transition min-h-[44px] min-w-[44px] touch-manipulation"
+        className="fixed top-4 right-4 z-50 p-3 bg-white dark:bg-slate-900 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 transition min-h-[44px] min-w-[44px] touch-manipulation"
         aria-label="Menu"
       >
         <div className="w-6 h-5 flex flex-col justify-between">
-          <span className={`block h-0.5 bg-gray-800 transition-transform ${isOpen ? 'rotate-45 translate-y-2' : ''}`} />
-          <span className={`block h-0.5 bg-gray-800 transition-opacity ${isOpen ? 'opacity-0' : ''}`} />
-          <span className={`block h-0.5 bg-gray-800 transition-transform ${isOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          <span className={`block h-0.5 bg-gray-800 dark:bg-gray-200 transition-transform ${isOpen ? 'rotate-45 translate-y-2' : ''}`} />
+          <span className={`block h-0.5 bg-gray-800 dark:bg-gray-200 transition-opacity ${isOpen ? 'opacity-0' : ''}`} />
+          <span className={`block h-0.5 bg-gray-800 dark:bg-gray-200 transition-transform ${isOpen ? '-rotate-45 -translate-y-2' : ''}`} />
         </div>
       </button>
 
@@ -94,24 +105,24 @@ export function HamburgerMenu({
 
       {/* Menu Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out safe-area ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out safe-area ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 flex items-center gap-3 safe-top">
+          <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center gap-3 safe-top">
             {(showConfig || showTemplates) && (
               <button
                 onClick={goBack}
-                className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 active:bg-gray-200 rounded-lg touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
             )}
-            <h2 className="text-xl font-bold text-gray-800 flex-1">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex-1">
               {showConfig ? 'Configuration' : showTemplates ? 'Templates' : 'Menu'}
             </h2>
           </div>
@@ -123,7 +134,7 @@ export function HamburgerMenu({
               <div className="space-y-2">
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Matches</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Matches</h3>
                     <button
                       onClick={() => {
                         onAddMatch();
@@ -145,8 +156,8 @@ export function HamburgerMenu({
                           key={match.id}
                           className={`rounded-lg p-3 transition-all cursor-pointer touch-manipulation ${
                             currentMatchId === match.id
-                              ? 'bg-indigo-100 ring-2 ring-indigo-500'
-                              : 'bg-gray-50 active:bg-gray-100'
+                              ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-500'
+                              : 'bg-gray-50 dark:bg-slate-800 active:bg-gray-100'
                           }`}
                           onClick={() => {
                             onSelectMatch(match.id);
@@ -156,18 +167,18 @@ export function HamburgerMenu({
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-base font-bold text-gray-800">
+                                <span className="text-base font-bold text-gray-800 dark:text-gray-100">
                                   Match #{match.matchNumber}
                                 </span>
                                 <span className={`px-2 py-0.5 text-xs font-semibold rounded ${
                                   match.alliance === 'red' 
-                                    ? 'bg-red-100 text-red-800' 
-                                    : 'bg-blue-100 text-blue-800'
+                                    ? 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-100' 
+                                    : 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-100'
                                 }`}>
                                   {match.alliance.toUpperCase()}
                                 </span>
                               </div>
-                              <div className="text-xs text-gray-600">
+                              <div className="text-xs text-gray-600 dark:text-gray-300">
                                 {match.partnerTeam ? `Partner: ${match.partnerTeam}` : 'No partner'}
                                 {' • '}
                                 {match.actions?.length || 0} action{match.actions?.length !== 1 ? 's' : ''}
@@ -179,10 +190,10 @@ export function HamburgerMenu({
                                   e.stopPropagation();
                                   onDuplicateMatch(match.id);
                                 }}
-                                className="p-2 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
+                                className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
                                 title="Duplicate"
                               >
-                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-gray-600 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
                               </button>
@@ -193,7 +204,7 @@ export function HamburgerMenu({
                                     onDeleteMatch(match.id);
                                   }
                                 }}
-                                className="p-2 hover:bg-red-100 active:bg-red-200 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
+                                className="p-2 hover:bg-red-100 dark:hover:bg-red-500/20 active:bg-red-200 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
                                 title="Delete"
                               >
                                 <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,8 +217,8 @@ export function HamburgerMenu({
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-6 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500 text-sm mb-3">No matches yet</p>
+                    <div className="text-center py-6 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                      <p className="text-gray-500 dark:text-gray-300 text-sm mb-3">No matches yet</p>
                       <button
                         onClick={() => {
                           onAddMatch();
@@ -221,21 +232,21 @@ export function HamburgerMenu({
                   )}
                 </div>
 
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Tools</h3>
+                <div className="border-t border-gray-200 dark:border-slate-800 pt-4 mt-4">
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Tools</h3>
                   
                   <button
                     onClick={() => setShowConfig(true)}
-                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
+                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
                   >
                     <div className="flex items-center gap-3">
-                      <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <span className="font-medium text-gray-800">Configuration</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-100">Configuration</span>
                     </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -245,54 +256,80 @@ export function HamburgerMenu({
                       onExportJSON();
                       closeMenu();
                     }}
-                    className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
+                    className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
                   >
-                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span className="font-medium text-gray-800">Export All Matches</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-100">Export All Matches</span>
                   </button>
 
                   <button
                     onClick={() => {
                       onSaveTemplate();
                     }}
-                    className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
+                    className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
                   >
-                    <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    <span className="font-medium text-gray-800">Save as Template</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-100">Save as Template</span>
                   </button>
 
                   <button
                     onClick={() => setShowTemplates(true)}
-                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
+                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
                   >
                     <div className="flex items-center gap-3">
-                      <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="font-medium text-gray-800">Load Template</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-100">Load Template</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {presets.length > 0 && (
-                        <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-semibold">
+                        <span className="text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-full font-semibold">
                           {presets.length}
                         </span>
                       )}
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
                   </button>
 
+                  {/* Theme Selector */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Appearance</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {THEME_OPTIONS.map(option => (
+                        <button
+                          key={option.id}
+                          onClick={() => onThemeChange(option.id)}
+                          className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 ${
+                            themePreference === option.id
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600'
+                              : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
+                          }`}
+                        >
+                          <span className="text-lg">{option.emoji}</span>
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                      {themePreference === 'system'
+                        ? `Following OS preference (currently ${resolvedThemeLabel}).`
+                        : `Forced ${themePreference} mode.`}
+                    </p>
+                  </div>
+
                   {/* Clear All Data - Danger Zone */}
-                  <div className="mt-6 pt-4 border-t border-red-200">
+                  <div className="mt-6 pt-4 border-t border-red-200 dark:border-red-500/30">
                     <h3 className="text-sm font-semibold text-red-600 uppercase tracking-wider mb-3">Danger Zone</h3>
                     <button
                       onClick={handleClearAllData}
-                      className="w-full flex items-center gap-3 p-3 text-left bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition touch-manipulation min-h-[48px] border-2 border-red-300"
+                      className="w-full flex items-center gap-3 p-3 text-left bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 active:bg-red-200 rounded-lg transition touch-manipulation min-h-[48px] border-2 border-red-300 dark:border-red-500/40"
                     >
                       <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -313,14 +350,14 @@ export function HamburgerMenu({
                     onConfigureActions();
                     closeMenu();
                   }}
-                  className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
+                  className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
                 >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                   </svg>
                   <div>
-                    <div className="font-medium text-gray-800">Configure Actions</div>
-                    <div className="text-xs text-gray-500">Manage action groups and types</div>
+                    <div className="font-medium text-gray-800 dark:text-gray-100">Configure Actions</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Manage action groups and types</div>
                   </div>
                 </button>
 
@@ -329,37 +366,37 @@ export function HamburgerMenu({
                     onConfigureActions();
                     closeMenu();
                   }}
-                  className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
+                  className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
                 >
-                  <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   <div>
-                    <div className="font-medium text-gray-800">Start Positions</div>
-                    <div className="text-xs text-gray-500">Manage preset positions</div>
+                    <div className="font-medium text-gray-800 dark:text-gray-100">Start Positions</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Manage preset positions</div>
                   </div>
                 </button>
 
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 mb-2">Advanced configuration for action types and starting positions. Changes apply to all matches.</p>
+                <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Advanced configuration for action types and starting positions. Changes apply to all matches.</p>
                 </div>
               </div>
             ) : (
               // Templates Submenu
               <div>
-                <h3 className="text-base font-bold text-gray-800 mb-3">Saved Templates</h3>
+                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-3">Saved Templates</h3>
 
                 {presets.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500 text-sm">No templates saved yet</p>
+                  <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-lg">
+                    <p className="text-gray-500 dark:text-gray-300 text-sm">No templates saved yet</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {presets.map(preset => (
-                      <div key={preset.id} className="bg-gray-50 rounded-lg p-3">
+                      <div key={preset.id} className="bg-gray-50 dark:bg-slate-800 rounded-lg p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-gray-800 text-sm">{preset.name}</span>
+                          <span className="font-medium text-gray-800 dark:text-gray-100 text-sm">{preset.name}</span>
                         </div>
                         <div className="flex gap-2">
                           <button
