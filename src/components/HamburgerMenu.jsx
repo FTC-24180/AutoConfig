@@ -33,6 +33,42 @@ export function HamburgerMenu({
     }
   };
 
+  const handleClearAllData = () => {
+    const confirmed = confirm(
+      '?? Clear All Data?\n\n' +
+      'This will permanently delete:\n' +
+      '• All configured matches\n' +
+      '• All saved templates\n' +
+      '• All custom action groups\n' +
+      '• All start positions\n\n' +
+      'This action cannot be undone!\n\n' +
+      'Are you sure you want to continue?'
+    );
+
+    if (confirmed) {
+      // Double confirmation for safety
+      const doubleConfirm = confirm(
+        '?? FINAL CONFIRMATION\n\n' +
+        'This will delete ALL data. Are you absolutely sure?'
+      );
+
+      if (doubleConfirm) {
+        try {
+          // Clear all localStorage
+          localStorage.clear();
+          
+          // Show success message
+          alert('? All data cleared successfully!\n\nThe page will now reload.');
+          
+          // Reload the page to reinitialize with defaults
+          window.location.reload();
+        } catch (error) {
+          alert('? Error clearing data: ' + error.message);
+        }
+      }
+    }
+  };
+
   return (
     <>
       {/* Hamburger Button */}
@@ -250,6 +286,23 @@ export function HamburgerMenu({
                       </svg>
                     </div>
                   </button>
+
+                  {/* Clear All Data - Danger Zone */}
+                  <div className="mt-6 pt-4 border-t border-red-200">
+                    <h3 className="text-sm font-semibold text-red-600 uppercase tracking-wider mb-3">Danger Zone</h3>
+                    <button
+                      onClick={handleClearAllData}
+                      className="w-full flex items-center gap-3 p-3 text-left bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition touch-manipulation min-h-[48px] border-2 border-red-300"
+                    >
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div>
+                        <div className="font-medium text-red-800">Clear All Data</div>
+                        <div className="text-xs text-red-600">Delete everything and reset app</div>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : showConfig ? (

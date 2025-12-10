@@ -31,22 +31,16 @@ function App() {
   const matchesHook = useMatches();
 
   // Get current match data
-  const currentMatch = matchesHook.getCurrentMatch() || {
-    matchNumber: 1,
-    partnerTeam: '',
-    alliance: 'red',
-    startPosition: { type: 'front' },
-    actions: []
-  };
+  const currentMatch = matchesHook.getCurrentMatch();
 
   const dragHandlers = useDragAndDrop(
-    currentMatch.actions || [],
+    currentMatch?.actions || [],
     (newActions) => {
       if (matchesHook.currentMatchId) {
         matchesHook.updateMatch(matchesHook.currentMatchId, { actions: newActions });
       }
     },
-    (from, to) => isValidReorder(currentMatch.actions || [], from, to)
+    (from, to) => isValidReorder(currentMatch?.actions || [], from, to)
   );
 
   useEffect(() => {
@@ -54,13 +48,6 @@ function App() {
       navigator.serviceWorker.register('/sw.js').catch((error) => {
         console.error('Service Worker registration failed:', error);
       });
-    }
-  }, []);
-
-  // Create first match if none exist
-  useEffect(() => {
-    if (matchesHook.matches.length === 0) {
-      matchesHook.addMatch();
     }
   }, []);
 
@@ -72,17 +59,17 @@ function App() {
 
   const addAction = (action) => {
     const newAction = createNewAction(action);
-    const updatedActions = [...(currentMatch.actions || []), newAction];
+    const updatedActions = [...(currentMatch?.actions || []), newAction];
     updateCurrentMatch({ actions: updatedActions });
   };
 
   const removeAction = (id) => {
-    const updatedActions = (currentMatch.actions || []).filter(action => action.id !== id);
+    const updatedActions = (currentMatch?.actions || []).filter(action => action.id !== id);
     updateCurrentMatch({ actions: updatedActions });
   };
 
   const moveAction = (id, direction) => {
-    const actions = currentMatch.actions || [];
+    const actions = currentMatch?.actions || [];
     const index = actions.findIndex(action => action.id === id);
     if (index === -1) return;
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
@@ -94,7 +81,7 @@ function App() {
   };
 
   const updateActionConfig = (id, key, value) => {
-    const updatedActions = (currentMatch.actions || []).map(action =>
+    const updatedActions = (currentMatch?.actions || []).map(action =>
       action.id === id
         ? { ...action, config: { ...action.config, [key]: value } }
         : action
@@ -109,7 +96,7 @@ function App() {
   };
 
   const updateStartPositionField = (field, value) => {
-    const newStartPosition = { ...currentMatch.startPosition, [field]: parseFloat(value) || 0 };
+    const newStartPosition = { ...(currentMatch?.startPosition || {}), [field]: parseFloat(value) || 0 };
     updateCurrentMatch({ startPosition: newStartPosition });
   };
 
@@ -184,6 +171,7 @@ function App() {
   };
 
   const canGoNext = () => {
+    if (!currentMatch) return false;
     switch (currentStep) {
       case 0: return currentMatch.matchNumber > 0 && currentMatch.alliance !== '';
       case 1: return currentMatch.startPosition?.type !== '';
@@ -212,19 +200,179 @@ function App() {
 
   const handleSelectMatch = (matchId) => {
     matchesHook.setCurrentMatchId(matchId);
+    setCurrentStep(0); // Go back to first step when switching matches
   };
 
   const handleDuplicateMatch = (matchId) => {
     const newMatchId = matchesHook.duplicateMatch(matchId);
     if (newMatchId) {
       matchesHook.setCurrentMatchId(newMatchId);
+      setCurrentStep(0);
     }
   };
 
-  const theme = currentMatch.alliance === 'red'
+  const theme = currentMatch?.alliance === 'red'
     ? { from: '#fff5f5', to: '#fff1f2', accent: '#ef4444' }
     : { from: '#eff6ff', to: '#eef2ff', accent: '#3b82f6' };
 
+  // Show welcome screen if no matches exist
+  if (matchesHook.matches.length === 0) {
+    return (
+      <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-indigo-50 to-blue-50">
+        <header className="bg-white shadow-sm flex-shrink-0 safe-top">
+          <div className="flex items-center justify-center px-3 py-2.5">
+            <div className="text-center">
+              <h1 className="text-lg font-bold text-indigo-900 leading-tight">
+                FTC AutoConfig
+              </h1>
+              <p className="text-xs text-indigo-600 leading-none">
+                Autonomous Match Configuration
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <HamburgerMenu
+          matches={matchesHook.matches}
+          currentMatchId={matchesHook.currentMatchId}
+          onSelectMatch={handleSelectMatch}
+          onAddMatch={handleAddMatch}
+          onDeleteMatch={matchesHook.deleteMatch}
+          onDuplicateMatch={handleDuplicateMatch}
+          onConfigureActions={() => setShowManageActions(true)}
+          onExportJSON={downloadJSON}
+          onSaveTemplate={() => setShowSaveTemplate(true)}
+          onLoadTemplate={() => {}}
+          presets={presets}
+          onLoadPreset={loadPreset}
+          onDeletePreset={deletePreset}
+        />
+
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="mb-6">
+                <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Welcome to FTC AutoConfig
+                </h2>
+                <p className="text-gray-600">
+                  Configure your autonomous routines for FTC matches
+                </p>
+              </div>
+
+              <button
+                onClick={handleAddMatch}
+                className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold text-lg transition-colors min-h-[56px] touch-manipulation shadow-lg hover:shadow-xl"
+              >
+                Create Your First Match
+              </button>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-500 mb-3">Or get started with:</p>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setShowSaveTemplate(true)}
+                    className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
+                  >
+                    📄 Load a Template
+                  </button>
+                  <button
+                    onClick={() => setShowManageActions(true)}
+                    className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
+                  >
+                    ⚙️ Configure Actions
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-sm text-blue-800">
+                  <strong className="font-semibold">Quick Start:</strong> Create a match, configure your starting position and actions, then scan the QR code with your robot.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modals */}
+        {showManageActions && (
+          <ManageConfigModal
+            actionGroups={actionGroupsHook.actionGroups}
+            startPositions={startPositionsHook.startPositions}
+            onClose={() => setShowManageActions(false)}
+            onExportConfig={exportConfig}
+            onRenameGroup={actionGroupsHook.renameGroup}
+            onDeleteGroup={actionGroupsHook.deleteGroup}
+            onAddActionToGroup={actionGroupsHook.addActionToGroup}
+            onUpdateActionInGroup={actionGroupsHook.updateActionInGroup}
+            onDeleteActionInGroup={actionGroupsHook.deleteActionInGroup}
+            onAddCustomGroup={actionGroupsHook.addCustomGroup}
+            onAddStartPosition={startPositionsHook.addStartPosition}
+            onUpdateStartPosition={startPositionsHook.updateStartPosition}
+            onDeleteStartPosition={startPositionsHook.deleteStartPosition}
+          />
+        )}
+
+        {showSaveTemplate && (
+          <div className="fixed inset-0 bg-white z-50 flex flex-col overflow-hidden safe-area">
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-3 py-3 flex justify-between items-center safe-top">
+              <h3 className="text-lg font-bold text-gray-800">Load Template</h3>
+              <button
+                onClick={() => setShowSaveTemplate(false)}
+                className="text-gray-500 active:text-gray-700 text-3xl leading-none w-11 h-11 flex items-center justify-center touch-manipulation"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {presets.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 mb-4">No templates saved yet</p>
+                  <button
+                    onClick={() => setShowSaveTemplate(false)}
+                    className="py-2 px-4 bg-gray-200 text-gray-700 rounded-lg"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {presets.map(preset => (
+                    <div key={preset.id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-800 text-sm">{preset.name}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          loadPreset(preset);
+                          setShowSaveTemplate(false);
+                        }}
+                        className="w-full py-2 px-3 bg-indigo-600 active:bg-indigo-700 text-white text-sm rounded-lg transition min-h-[40px] touch-manipulation"
+                      >
+                        Load Template
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Normal wizard view when matches exist
   return (
     <div 
       className="h-screen flex flex-col overflow-hidden touch-manipulation"
@@ -238,7 +386,7 @@ function App() {
               FTC AutoConfig
             </h1>
             <p className="text-xs text-indigo-600 leading-none">
-              Match #{currentMatch.matchNumber} • {currentMatch.alliance === 'red' ? '🔴' : '🔵'} {currentMatch.alliance.toUpperCase()}
+              Match #{currentMatch?.matchNumber || '?'} • {currentMatch?.alliance === 'red' ? '🔴' : '🔵'} {currentMatch?.alliance?.toUpperCase() || 'NONE'}
             </p>
           </div>
         </div>
@@ -265,21 +413,21 @@ function App() {
       <div className="flex-1 overflow-hidden">
         <WizardContainer currentStep={currentStep} onStepChange={setCurrentStep}>
           <Step1MatchSetup
-            matchNumber={currentMatch.matchNumber}
-            partnerTeam={currentMatch.partnerTeam}
-            alliance={currentMatch.alliance}
+            matchNumber={currentMatch?.matchNumber || 1}
+            partnerTeam={currentMatch?.partnerTeam || ''}
+            alliance={currentMatch?.alliance || 'red'}
             onMatchNumberChange={(num) => updateCurrentMatch({ matchNumber: num })}
             onPartnerTeamChange={(team) => updateCurrentMatch({ partnerTeam: team })}
             onAllianceChange={(alliance) => updateCurrentMatch({ alliance })}
           />
           <Step4StartPosition
-            startPosition={currentMatch.startPosition}
+            startPosition={currentMatch?.startPosition || { type: 'front' }}
             onStartPositionChange={(pos) => updateCurrentMatch({ startPosition: pos })}
             startPositions={startPositionsHook.startPositions}
             onUpdateField={updateStartPositionField}
           />
           <Step5Actions
-            actionList={currentMatch.actions || []}
+            actionList={currentMatch?.actions || []}
             actionGroups={actionGroupsHook.actionGroups}
             expandedGroup={expandedGroup}
             setExpandedGroup={setExpandedGroup}

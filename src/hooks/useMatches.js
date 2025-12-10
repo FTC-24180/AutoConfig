@@ -8,7 +8,8 @@ export function useMatches() {
     try {
       const raw = localStorage.getItem(MATCHES_STORAGE_KEY);
       if (raw) {
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
       }
     } catch (e) {
       console.error('Failed to load matches:', e);
@@ -37,6 +38,8 @@ export function useMatches() {
     try {
       if (currentMatchId) {
         localStorage.setItem(CURRENT_MATCH_KEY, currentMatchId);
+      } else {
+        localStorage.removeItem(CURRENT_MATCH_KEY);
       }
     } catch (e) {
       console.error('Failed to save current match:', e);
@@ -60,11 +63,13 @@ export function useMatches() {
   const deleteMatch = (matchId) => {
     setMatches(prev => {
       const newMatches = prev.filter(m => m.id !== matchId);
-      // If we deleted the current match, select the first one
-      if (currentMatchId === matchId && newMatches.length > 0) {
-        setCurrentMatchId(newMatches[0].id);
-      } else if (newMatches.length === 0) {
-        setCurrentMatchId(null);
+      // If we deleted the current match, select the first one or clear selection
+      if (currentMatchId === matchId) {
+        if (newMatches.length > 0) {
+          setCurrentMatchId(newMatches[0].id);
+        } else {
+          setCurrentMatchId(null);
+        }
       }
       return newMatches;
     });
@@ -78,7 +83,7 @@ export function useMatches() {
 
   const getCurrentMatch = () => {
     if (!currentMatchId && matches.length > 0) {
-      // Auto-select first match if none selected
+      // Auto-select first match if none selected but matches exist
       setCurrentMatchId(matches[0].id);
       return matches[0];
     }
@@ -159,6 +164,8 @@ export function useMatches() {
       setMatches(importedMatches);
       if (importedMatches.length > 0) {
         setCurrentMatchId(importedMatches[0].id);
+      } else {
+        setCurrentMatchId(null);
       }
     }
   };
