@@ -1,6 +1,6 @@
 # FTC AutoConfig
 
-A Progressive Web App (PWA) for configuring FTC DECODE season autonomous opmodes. Built with React and TailwindCSS, deployed as a static site on GitHub Pages.
+A Progressive Web App (PWA) for configuring FTC autonomous opmodes. Built with React and TailwindCSS, deployed as a static site on GitHub Pages.
 
 ## Features
 
@@ -80,4 +80,4 @@ The app is automatically deployed to GitHub Pages when changes are pushed to the
 
 ## License
 
-This project is part of FTC Team 24180's tools for the DECODE season.
+This project is part of FTC Team 24180's programming tools.

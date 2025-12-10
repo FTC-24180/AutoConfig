@@ -1,7 +1,7 @@
 {
-  "name": "FTC AutoConfig - DECODE Season",
+  "name": "FTC AutoConfig",
   "short_name": "FTC AutoConfig",
-  "description": "Configuration builder for FTC DECODE season autonomous opmodes",
+  "description": "Configuration builder for autonomous opmodes",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
