@@ -26,6 +26,14 @@
   padding-right: env(safe-area-inset-right);
 }
 
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* Better Touch Response */
 .touch-manipulation {
   -webkit-tap-highlight-color: transparent;

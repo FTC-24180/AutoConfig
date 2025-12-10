@@ -219,16 +219,16 @@ export function ManageConfigModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 flex items-start justify-center"
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 flex items-start justify-center overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-4 my-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold">Manage Configuration</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Manage Configuration</h3>
           <div className="flex gap-2">
             <button onClick={onExportConfig} className="flex items-center gap-1 py-1 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,19 +236,19 @@ export function ManageConfigModal({
               </svg>
               Export
             </button>
-            <button onClick={onClose} className="py-1 px-2 bg-gray-200 hover:bg-gray-300 rounded transition">
+            <button onClick={onClose} className="py-1 px-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-gray-100 rounded transition">
               Close
             </button>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-4 border-b">
+        <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-slate-700">
           <button
             onClick={() => setActiveTab('actions')}
             className={`px-4 py-2 font-semibold transition ${
               activeTab === 'actions'
                 ? 'text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:text-gray-800'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
             }`}
           >
             Action Groups
@@ -258,7 +258,7 @@ export function ManageConfigModal({
             className={`px-4 py-2 font-semibold transition ${
               activeTab === 'positions'
                 ? 'text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:text-gray-800'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
             }`}
           >
             Start Positions
@@ -427,28 +427,28 @@ export function ManageConfigModal({
         {activeTab === 'positions' && (
           <div>
             <div className="mb-4">
-              <h4 className="font-semibold text-gray-800">Available Start Positions</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100">Available Start Positions</h4>
             </div>
 
             <div className="space-y-2">
               {startPositions.map((pos, idx) => (
-                <div key={pos.id + idx} className="flex gap-2 items-center border border-gray-300 p-3 rounded">
-                  <span className="text-lg">&#127937;</span>
+                <div key={pos.id + idx} className="flex gap-2 items-center border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 rounded">
+                  <span className="text-lg">??</span>
                   <input
                     value={pos.id}
                     onChange={(e) => onUpdateStartPosition(idx, { id: e.target.value })}
-                    className="px-2 py-1 border border-gray-300 rounded w-32"
+                    className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded w-32"
                     placeholder="ID"
                   />
                   <input
                     value={pos.label}
                     onChange={(e) => onUpdateStartPosition(idx, { label: e.target.value })}
-                    className="px-2 py-1 border border-gray-300 rounded flex-1"
+                    className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded flex-1"
                     placeholder="Label"
                   />
                   <button
                     onClick={() => onDeleteStartPosition(idx)}
-                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-red-600 hover:text-red-700 transition"
+                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-slate-700 text-red-600 transition"
                     title="Delete position"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -461,9 +461,9 @@ export function ManageConfigModal({
               <AddStartPositionForm onAdd={onAddStartPosition} />
             </div>
 
-            <div className="mt-4 p-3 bg-blue-50 border border-gray-300 border-blue-200 rounded">
-              <p className="text-xs text-blue-800">
-                <strong>Note:</strong> Start positions define preset locations. The &quot;Custom&quot; position with configurable X, Y, ? is always available and cannot be removed.
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded">
+              <p className="text-xs text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> Start positions define preset locations. The &quot;Custom&quot; position with configurable X, Y, ? (theta) is always available and cannot be removed.
               </p>
             </div>
           </div>

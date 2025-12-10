@@ -1,9 +1,33 @@
 import { useState } from 'react';
 
 const THEME_OPTIONS = [
-  { id: 'system', label: 'System', emoji: '???' },
-  { id: 'light', label: 'Light', emoji: '??' },
-  { id: 'dark', label: 'Dark', emoji: '??' },
+  { 
+    id: 'system', 
+    label: 'System', 
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  { 
+    id: 'light', 
+    label: 'Light', 
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    )
+  },
+  { 
+    id: 'dark', 
+    label: 'Dark', 
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+    )
+  },
 ];
 
 export function HamburgerMenu({ 
@@ -82,11 +106,12 @@ export function HamburgerMenu({
 
   return (
     <>
-      {/* Hamburger Button */}
+      {/* Hamburger Button - Positioned within header safe area */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 right-4 z-50 p-3 bg-white dark:bg-slate-900 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 transition min-h-[44px] min-w-[44px] touch-manipulation"
+        className="fixed right-4 z-50 p-2.5 bg-white dark:bg-slate-900 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 dark:active:bg-slate-700 transition min-h-[44px] min-w-[44px] touch-manipulation"
         aria-label="Menu"
+        style={{ top: 'calc(env(safe-area-inset-top) + 0.625rem)' }}
       >
         <div className="w-6 h-5 flex flex-col justify-between">
           <span className={`block h-0.5 bg-gray-800 dark:bg-gray-200 transition-transform ${isOpen ? 'rotate-45 translate-y-2' : ''}`} />
@@ -105,11 +130,11 @@ export function HamburgerMenu({
 
       {/* Menu Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out safe-area ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full pt-safe">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center gap-3 safe-top">
             {(showConfig || showTemplates) && (
@@ -214,7 +239,7 @@ export function HamburgerMenu({
                             </div>
                           </div>
                         </div>
-                      ))}
+                      ))},
                     </div>
                   ) : (
                     <div className="text-center py-6 bg-gray-50 dark:bg-slate-800 rounded-lg">
@@ -306,13 +331,15 @@ export function HamburgerMenu({
                         <button
                           key={option.id}
                           onClick={() => onThemeChange(option.id)}
-                          className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 ${
+                          className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 min-h-[72px] ${
                             themePreference === option.id
-                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600'
+                              ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
                               : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
                           }`}
                         >
-                          <span className="text-lg">{option.emoji}</span>
+                          <span className={themePreference === option.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}>
+                            {option.icon}
+                          </span>
                           {option.label}
                         </button>
                       ))}
@@ -335,8 +362,8 @@ export function HamburgerMenu({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                       <div>
-                        <div className="font-medium text-red-800">Clear All Data</div>
-                        <div className="text-xs text-red-600">Delete everything and reset app</div>
+                        <div className="font-medium text-red-800 dark:text-red-200">Clear All Data</div>
+                        <div className="text-xs text-red-600 dark:text-red-400">Delete everything and reset app</div>
                       </div>
                     </button>
                   </div>

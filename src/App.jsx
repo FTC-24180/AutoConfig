@@ -13,6 +13,7 @@ import { Step1MatchSetup } from './components/steps/Step1MatchSetup';
 import { Step4StartPosition } from './components/steps/Step4StartPosition';
 import { Step5Actions } from './components/steps/Step5Actions';
 import { Step6QRCode } from './components/steps/Step6QRCode';
+import { AllianceIcon } from './components/AllianceIcon';
 import { isValidReorder, createNewAction } from './utils/actionUtils';
 
 function App() {
@@ -400,8 +401,13 @@ function App() {
             <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight">
               FTC AutoConfig
             </h1>
-            <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-none">
-              Match #{currentMatch?.matchNumber || '?'} • {currentMatch?.alliance === 'red' ? '🔴' : '🔵'} {currentMatch?.alliance?.toUpperCase() || 'NONE'}
+            <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-none flex items-center justify-center gap-1">
+              Match #{currentMatch?.matchNumber || '?'} •{' '}
+              <AllianceIcon 
+                alliance={currentMatch?.alliance} 
+                className={`w-3 h-3 ${currentMatch?.alliance === 'red' ? 'text-red-600' : 'text-blue-600'}`}
+              />
+              {' '}{currentMatch?.alliance?.toUpperCase() || 'NONE'}
             </p>
           </div>
         </div>
