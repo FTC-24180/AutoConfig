@@ -1,8 +1,6 @@
 export function ActionPicker({
   actionGroups,
   actionList,
-  hasStart,
-  hasPark,
   expandedGroup,
   setExpandedGroup,
   onAddAction,

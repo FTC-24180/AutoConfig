@@ -10,8 +10,7 @@ export function ActionSequence({
   parkIndex,
   onMoveAction,
   onRemoveAction,
-  onUpdateWaitTime,
-  onUpdateStartPosition,
+  onUpdateActionConfig,
   onClearAll,
   dragHandlers
 }) {
@@ -52,15 +51,28 @@ export function ActionSequence({
                   {getActionDisplayLabel(action)}
                 </span>
 
-                {action.configType === 'wait' && action.config && (
-                  <input
-                    type="number"
-                    value={action.config.waitTime}
-                    onChange={(e) => onUpdateWaitTime(action.id, e.target.value)}
-                    placeholder="ms"
-                    className="w-16 md:w-20 px-2 py-1 text-sm border rounded"
-                    min="0"
-                  />
+                {action.config && Object.keys(action.config).length > 0 && (
+                  <div className="flex gap-2 items-center">
+                    {Object.entries(action.config).map(([key, value]) => {
+                      const isNumber = typeof value === 'number';
+                      return (
+                        <div key={key} className="flex items-center gap-1">
+                          <label className="text-xs text-gray-600">{key}:</label>
+                          <input
+                            type={isNumber ? 'number' : 'text'}
+                            value={value}
+                            onChange={(e) => {
+                              const newValue = isNumber 
+                                ? (parseFloat(e.target.value) || 0)
+                                : e.target.value;
+                              onUpdateActionConfig(action.id, key, newValue);
+                            }}
+                            className="w-20 md:w-24 px-2 py-1 text-xs border rounded"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
 
                 <div className="flex gap-1">
@@ -85,7 +97,9 @@ export function ActionSequence({
                     className="p-1 text-red-600 hover:text-red-800"
                     title="Remove"
                   >
-                    &#215;
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </div>
               </div>

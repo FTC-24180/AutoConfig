@@ -1,15 +1,4 @@
 export function getActionDisplayLabel(action) {
-  if (action.configType === 'start' && action.config) {
-    const posType = action.config.positionType;
-    if (posType === 'front') return 'Start (Front)';
-    if (posType === 'back') return 'Start (Back)';
-    if (posType === 'custom') {
-      const x = action.config.x ?? 0;
-      const y = action.config.y ?? 0;
-      const theta = action.config.theta ?? 0;
-      return `Start (${x}, ${y}, ${theta}°)`;
-    }
-  }
   return action.label;
 }
 
@@ -23,18 +12,16 @@ export function isValidReorder(actionList, fromIndex, toIndex) {
 }
 
 export function createNewAction(action) {
-  let config = null;
-  if (action.hasConfig) {
-    if (action.configType === 'wait') {
-      config = { waitTime: 0 };
-    }
-  }
-
-  return {
+  const newAction = {
     id: crypto.randomUUID(),
     type: action.id,
-    label: action.label,
-    config: config,
-    configType: action.configType
+    label: action.label
   };
+
+  // Only add config if the action has config defined
+  if (action.config && Object.keys(action.config).length > 0) {
+    newAction.config = { ...action.config };
+  }
+
+  return newAction;
 }

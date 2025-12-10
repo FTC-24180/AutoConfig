@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 const DEFAULT_ACTION_GROUPS = {
   launch: {
     label: 'Launch',
-    icon: '??',
+    icon: '🚀',
     actions: [
       { id: 'near_launch', label: 'Near Launch' },
       { id: 'far_launch', label: 'Far Launch' }
@@ -11,7 +11,7 @@ const DEFAULT_ACTION_GROUPS = {
   },
   pickup: {
     label: 'Pickup',
-    icon: '??',
+    icon: '📦',
     actions: [
       { id: 'spike_1', label: 'Spike 1' },
       { id: 'spike_2', label: 'Spike 2' },
@@ -21,7 +21,7 @@ const DEFAULT_ACTION_GROUPS = {
   },
   parking: {
     label: 'Parking',
-    icon: '???',
+    icon: '🅿️',
     actions: [
       { id: 'near_park', label: 'Park (Near)' },
       { id: 'far_park', label: 'Park (Far)' }
@@ -29,11 +29,11 @@ const DEFAULT_ACTION_GROUPS = {
   },
   other: {
     label: 'Other',
-    icon: '??',
+    icon: '🛠️',
     actions: [
       { id: 'dump', label: 'Dump' },
       { id: 'drive_to', label: 'DriveTo' },
-      { id: 'wait', label: 'Wait', hasConfig: true, configType: 'wait' }
+      { id: 'wait', label: 'Wait', config: { waitTime: 0 } }
     ]
   }
 };
@@ -63,7 +63,7 @@ export function useActionGroups() {
 
   const addCustomGroup = (key, label) => {
     if (!key) return;
-    setActionGroups(prev => ({ ...prev, [key]: { label: label || key, icon: '??', actions: [] } }));
+    setActionGroups(prev => ({ ...prev, [key]: { label: label || key, icon: '🛠️', actions: [] } }));
   };
 
   const renameGroup = (key, newLabel) => {

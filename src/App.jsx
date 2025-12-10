@@ -34,11 +34,9 @@ function App() {
     (from, to) => isValidReorder(actionList, from, to)
   );
 
-  // Derived flags
-  const hasStart = actionList.some(a => a.configType === 'start');
-  const hasPark = actionList.some(a => a.type === 'near_park' || a.type === 'far_park');
-  const startIndex = actionList.findIndex(a => a.configType === 'start');
-  const parkIndex = actionList.findIndex(a => a.type === 'near_park' || a.type === 'far_park');
+  // Derived flags - no longer needed but kept for compatibility
+  const startIndex = -1;
+  const parkIndex = -1;
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 640);
@@ -75,18 +73,10 @@ function App() {
     setActionList(newList);
   };
 
-  const updateWaitTime = (id, waitTime) => {
-    setActionList(actionList.map(action =>
-      action.id === id
-        ? { ...action, config: { ...action.config, waitTime: parseInt(waitTime) || 0 } }
-        : action
-    ));
-  };
-
-  const updateStartPositionNumeric = (id, field, value) => {
+  const updateActionConfig = (id, key, value) => {
     setActionList(prev => prev.map(action =>
       action.id === id
-        ? { ...action, config: { ...action.config, [field]: parseFloat(value) || 0 } }
+        ? { ...action, config: { ...action.config, [key]: value } }
         : action
     ));
   };
@@ -111,7 +101,7 @@ function App() {
     alliance,
     startLocation,
     startPosition,
-    actions: actionList.map(({ id, ...rest }) => rest)
+    actions: actionList.map(({ id, label, ...rest }) => rest)
   });
 
   const exportJSON = () => JSON.stringify(getConfig(), null, 2);
@@ -141,7 +131,19 @@ function App() {
     if (preset.config.startPosition) {
       setStartPosition(preset.config.startPosition);
     }
-    setActionList(preset.config.actions.map(action => ({ ...action, id: crypto.randomUUID() })));
+    // Restore labels from action groups based on action type
+    setActionList(preset.config.actions.map(action => {
+      // Find the label from action groups
+      let label = action.type; // fallback to type if not found
+      for (const group of Object.values(actionGroupsHook.actionGroups)) {
+        const matchingAction = group.actions.find(a => a.id === action.type);
+        if (matchingAction) {
+          label = matchingAction.label;
+          break;
+        }
+      }
+      return { ...action, id: crypto.randomUUID(), label };
+    }));
   };
 
   const clearAll = () => {
@@ -293,8 +295,7 @@ function App() {
               parkIndex={parkIndex}
               onMoveAction={moveAction}
               onRemoveAction={removeAction}
-              onUpdateWaitTime={updateWaitTime}
-              onUpdateStartPosition={updateStartPositionNumeric}
+              onUpdateActionConfig={updateActionConfig}
               onClearAll={clearAll}
               dragHandlers={dragHandlers}
             />
@@ -307,8 +308,6 @@ function App() {
                 <ActionPicker
                   actionGroups={actionGroupsHook.actionGroups}
                   actionList={actionList}
-                  hasStart={hasStart}
-                  hasPark={hasPark}
                   expandedGroup={expandedGroup}
                   setExpandedGroup={setExpandedGroup}
                   onAddAction={addAction}
@@ -323,7 +322,12 @@ function App() {
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">Export</h2>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">JSON Configuration</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">JSON Configuration</label>
+                  <span className="text-xs text-gray-500">
+                    {new Blob([exportJSON()]).size} bytes
+                  </span>
+                </div>
                 <pre className="bg-gray-50 p-3 md:p-4 rounded-lg text-xs overflow-x-auto max-h-40 md:max-h-60 overflow-y-auto">
                   {exportJSON()}
                 </pre>
@@ -454,8 +458,6 @@ function App() {
               <ActionPicker
                 actionGroups={actionGroupsHook.actionGroups}
                 actionList={actionList}
-                hasStart={hasStart}
-                hasPark={hasPark}
                 expandedGroup={expandedGroup}
                 setExpandedGroup={setExpandedGroup}
                 onAddAction={addAction}
