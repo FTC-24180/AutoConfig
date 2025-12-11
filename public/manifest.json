@@ -2,14 +2,14 @@
   "name": "FTC AutoConfig",
   "short_name": "FTC AutoConfig",
   "description": "Configuration builder for FTC autonomous opmodes",
-  "start_url": "./",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./vite.svg",
+      "src": "/vite.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
