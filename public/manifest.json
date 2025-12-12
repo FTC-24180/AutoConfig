@@ -1,18 +1,41 @@
 {
-  "name": "FTC AutoConfig",
+  "name": "FTC AutoConfig - Autonomous Configuration Builder",
   "short_name": "FTC AutoConfig",
-  "description": "Configuration builder for FTC autonomous opmodes",
+  "description": "Mobile-first configuration builder for FTC autonomous routines with QR code generation",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "education"],
   "icons": [
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
     {
       "src": "/vite.svg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/svg+xml"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Match",
+      "short_name": "New Match",
+      "description": "Create a new match configuration",
+      "url": "/?action=new",
+      "icons": []
     }
   ]
 }

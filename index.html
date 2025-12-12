@@ -2,15 +2,44 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- Standard favicon -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    
+    <!-- iOS-specific icons -->
+    <link rel="apple-touch-icon" href="/icon-512.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-512.svg" />
+    
+    <!-- Viewport configuration -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="description" content="FTC Autonomous Configuration Builder" />
+    
+    <!-- SEO and description -->
+    <meta name="description" content="FTC Autonomous Configuration Builder - Create, configure, and deploy autonomous routines for FTC matches with QR code generation" />
+    <meta name="keywords" content="FTC, FIRST Tech Challenge, autonomous, configuration, robotics, QR code" />
+    <meta name="author" content="FTC Team 24180" />
+    
+    <!-- PWA theme -->
     <meta name="theme-color" content="#4f46e5" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#4f46e5" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1e293b" />
+    
+    <!-- PWA capabilities -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FTC AutoConfig" />
+    
+    <!-- Disable iOS telephone number detection -->
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- Web app manifest -->
     <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Microsoft Edge/Windows -->
+    <meta name="msapplication-TileColor" content="#4f46e5" />
+    <meta name="msapplication-config" content="none" />
+    
+    <!-- Theme initialization script (must run before page render) -->
     <script>
       (() => {
         try {
@@ -27,7 +56,8 @@
         }
       })();
     </script>
-    <title>FTC AutoConfig</title>
+    
+    <title>FTC AutoConfig - Autonomous Configuration Builder</title>
   </head>
   <body>
     <div id="root"></div>
