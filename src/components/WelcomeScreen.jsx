@@ -50,16 +50,22 @@ export function WelcomeScreen({
                 {presets.length > 0 && (
                   <button
                     onClick={onShowSaveTemplate}
-                    className="w-full py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
+                    className="w-full py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation flex items-center justify-center gap-2"
                   >
-                    ?? Load a Template
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Load a Template
                   </button>
                 )}
                 <button
                   onClick={onShowManageActions}
-                  className="w-full py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation"
+                  className="w-full py-2 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-100 rounded-lg font-medium text-sm transition min-h-[44px] touch-manipulation flex items-center justify-center gap-2"
                 >
-                  ?? Configure Actions
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  Configure Actions
                 </button>
               </div>
             </div>

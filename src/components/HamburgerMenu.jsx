@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useImperativeHandle, forwardRef } from 'react';
 import { ActionsConfigContent } from './config/ActionsConfigContent';
 import { StartPositionsConfigContent } from './config/StartPositionsConfigContent';
 import { ClearDataModal } from './ClearDataModal';
@@ -35,7 +35,7 @@ const THEME_OPTIONS = [
   },
 ];
 
-export function HamburgerMenu({ 
+export const HamburgerMenu = forwardRef(function HamburgerMenu({ 
   matches,
   currentMatchId,
   onSelectMatch,
@@ -64,7 +64,7 @@ export function HamburgerMenu({
   onAddStartPosition,
   onUpdateStartPosition,
   onDeleteStartPosition
-}) {
+}, ref) {
   const [isOpen, setIsOpen] = useState(false);
   const [showMatches, setShowMatches] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -76,6 +76,30 @@ export function HamburgerMenu({
   const [showClearDataModal, setShowClearDataModal] = useState(false);
   const [showConfirmClearModal, setShowConfirmClearModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    openToActionsConfig: () => {
+      setIsOpen(true);
+      setShowConfig(false);
+      setShowActionsConfig(true);
+      setShowPositionsConfig(false);
+      setShowTemplates(false);
+      setShowMatches(false);
+      setShowSettings(false);
+      setShowHelp(false);
+    },
+    openToTemplates: () => {
+      setIsOpen(true);
+      setShowConfig(false);
+      setShowActionsConfig(false);
+      setShowPositionsConfig(false);
+      setShowTemplates(true);
+      setShowMatches(false);
+      setShowSettings(false);
+      setShowHelp(false);
+    }
+  }));
 
   const closeMenu = () => {
     setIsOpen(false);
@@ -760,4 +784,4 @@ export function HamburgerMenu({
       />
     </>
   );
-}
+})

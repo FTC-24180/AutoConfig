@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useActionGroups } from './hooks/useActionGroups';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { usePresets } from './hooks/usePresets';
@@ -24,6 +24,9 @@ function App() {
   // Modal state
   const [showManageActions, setShowManageActions] = useState(false);
   const [showManageStartPositions, setShowManageStartPositions] = useState(false);
+
+  // Ref for HamburgerMenu
+  const hamburgerMenuRef = useRef(null);
 
   // Hooks
   const { presets, savePreset, deletePreset } = usePresets();
@@ -159,37 +162,14 @@ function App() {
           isDarkTheme={isDarkTheme}
           onAddMatch={handleAddMatch}
           presets={presets}
-          onShowSaveTemplate={() => setShowLoadTemplate(true)}
-          onShowManageActions={() => setShowManageActions(true)}
+          onShowSaveTemplate={() => hamburgerMenuRef.current?.openToTemplates()}
+          onShowManageActions={() => hamburgerMenuRef.current?.openToActionsConfig()}
         />
 
-        <HamburgerMenu {...menuProps} />
+        <HamburgerMenu ref={hamburgerMenuRef} {...menuProps} />
 
-        {/* Modals */}
-        {showManageActions && (
-          <ManageActionsModal
-            actionGroups={actionGroupsHook.actionGroups}
-            onClose={() => setShowManageActions(false)}
-            onExportConfig={exportConfig}
-            onRenameGroup={actionGroupsHook.renameGroup}
-            onDeleteGroup={actionGroupsHook.deleteGroup}
-            onAddActionToGroup={actionGroupsHook.addActionToGroup}
-            onUpdateActionInGroup={actionGroupsHook.updateActionInGroup}
-            onDeleteActionInGroup={actionGroupsHook.deleteActionInGroup}
-            onAddCustomGroup={actionGroupsHook.addCustomGroup}
-          />
-        )}
-
-        {showManageStartPositions && (
-          <ManageStartPositionsModal
-            startPositions={startPositionsHook.startPositions}
-            onClose={() => setShowManageStartPositions(false)}
-            onExportConfig={exportConfig}
-            onAddStartPosition={startPositionsHook.addStartPosition}
-            onUpdateStartPosition={startPositionsHook.updateStartPosition}
-            onDeleteStartPosition={startPositionsHook.deleteStartPosition}
-          />
-        )}
+        {/* Modals - Remove these as they're no longer needed */}
+        {/* ManageActionsModal and ManageStartPositionsModal removed */}
 
         {showLoadTemplate && (
           <LoadTemplateModal
@@ -233,33 +213,9 @@ function App() {
         onPrev={handlePrev}
       />
 
-      <HamburgerMenu {...menuProps} />
+      <HamburgerMenu ref={hamburgerMenuRef} {...menuProps} />
 
-      {/* Manage Actions Modal */}
-      {showManageActions && (
-        <ManageActionsModal
-          actionGroups={actionGroupsHook.actionGroups}
-          onClose={() => setShowManageActions(false)}
-          onExportConfig={exportConfig}
-          onRenameGroup={actionGroupsHook.renameGroup}
-          onDeleteGroup={actionGroupsHook.deleteGroup}
-          onAddActionToGroup={actionGroupsHook.addActionToGroup}
-          onUpdateActionInGroup={actionGroupsHook.updateActionInGroup}
-          onDeleteActionInGroup={actionGroupsHook.deleteActionInGroup}
-          onAddCustomGroup={actionGroupsHook.addCustomGroup}
-        />
-      )}
-
-      {/* Manage Start Positions Modal */}
-      {showManageStartPositions && (
-        <ManageStartPositionsModal
-          startPositions={startPositionsHook.startPositions}
-          onClose={() => setShowManageStartPositions(false)}
-          onAddStartPosition={startPositionsHook.addStartPosition}
-          onUpdateStartPosition={startPositionsHook.updateStartPosition}
-          onDeleteStartPosition={startPositionsHook.deleteStartPosition}
-        />
-      )}
+      {/* Remove Manage Actions and Start Positions Modals as they're now in the hamburger menu */}
 
       {/* Save Template Modal */}
       {showSaveTemplate && (
