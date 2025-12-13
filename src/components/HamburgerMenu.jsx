@@ -634,7 +634,18 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
             ) : showHelp ? (
               // Help & Info View
               <div className="space-y-6">
-                {/* Help content - Add back full help section */}
+                {/* Version Info - Moved to top */}
+                <div className="text-center pb-4 border-b border-gray-200 dark:border-slate-800">
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">FTC AutoConfig</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    Version 2.2.0 • PWA-Enabled
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                    Made with ❤️ by FTC Team 24180
+                  </p>
+                </div>
+
+                {/* PWA Installation */}
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -643,15 +654,168 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Install as App</h3>
                   </div>
                   <div className="space-y-4 bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      This app can be installed on your device for offline use. See Help & Info for instructions.
-                    </p>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">📱 iPhone/iPad</h4>
+                      <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                        <li>Open in Safari browser</li>
+                        <li>Tap the Share button (📤)</li>
+                        <li>Scroll down and tap "Add to Home Screen"</li>
+                        <li>Tap "Add"</li>
+                      </ol>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">🤖 Android</h4>
+                      <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                        <li>Open in Chrome browser</li>
+                        <li>Tap the menu (⋮)</li>
+                        <li>Tap "Install app" or "Add to Home Screen"</li>
+                        <li>Tap "Install"</li>
+                      </ol>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">💻 Desktop</h4>
+                      <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-1 list-decimal list-inside">
+                        <li>Open in Chrome or Edge</li>
+                        <li>Click install icon (⊕) in address bar</li>
+                        <li>Click "Install"</li>
+                      </ol>
+                    </div>
                   </div>
                 </div>
-                <div className="text-center pt-4 border-t border-gray-200 dark:border-slate-800">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Version 2.0 • PWA-Enabled
-                  </p>
+
+                {/* Quick Tips */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Quick Tips</h3>
+                  </div>
+                  <div className="space-y-3 bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">📱 Swipe Navigation</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">On the QR Code step, swipe left/right to navigate between matches</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">🔄 Drag to Reorder</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Long press and drag actions to reorder your autonomous sequence</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">💾 Auto-Save</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">All changes are automatically saved to your device</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">📋 Duplicate Matches</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Tap the duplicate icon (📋) in the Matches menu to copy a match configuration</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">📦 Multiple QR Options</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Generate individual QR codes per match or combine all matches into one QR code</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Keyboard Shortcuts */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Keyboard Shortcuts</h3>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 dark:text-gray-300">Next Step</span>
+                        <kbd className="px-2 py-1 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded text-xs font-mono">→</kbd>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 dark:text-gray-300">Previous Step</span>
+                        <kbd className="px-2 py-1 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded text-xs font-mono">←</kbd>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 dark:text-gray-300">Close Menu/Modal</span>
+                        <kbd className="px-2 py-1 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded text-xs font-mono">Esc</kbd>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Management */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    </svg>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Data Storage</h3>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                      All data is stored locally on your device. Nothing is sent to a server.
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-600 dark:text-green-400">✓</span>
+                        <span className="text-gray-700 dark:text-gray-300">Works offline after first load</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-600 dark:text-green-400">✓</span>
+                        <span className="text-gray-700 dark:text-gray-300">Private - your data never leaves your device</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-600 dark:text-green-400">✓</span>
+                        <span className="text-gray-700 dark:text-gray-300">Persists across app closes</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-600 dark:text-amber-400">⚠</span>
+                        <span className="text-gray-700 dark:text-gray-300">Clearing browser data will delete everything</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Backup Recommendation */}
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-200 mb-1">💾 Backup Your Data</h4>
+                      <p className="text-sm text-amber-900 dark:text-amber-200">
+                        Regularly export your matches (Matches → Export All) and configurations (Configuration → Export) to save backups.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Troubleshooting */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Troubleshooting</h3>
+                  </div>
+                  <div className="space-y-3 bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">App won't load?</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Try a hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">Changes not saving?</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Check if your browser's storage is full or disabled in settings</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">QR code won't scan?</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Ensure good lighting and that the QR code fills most of the camera view. Try downloading JSON instead.</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">Lost all data?</h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-300">Check if you accidentally cleared browser data. Restore from your JSON backups if available.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : showActionsConfig ? (
