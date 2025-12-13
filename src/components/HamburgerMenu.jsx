@@ -201,7 +201,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
               </button>
             )}
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex-1">
-              {showMatches ? 'Matches' : showActionsConfig ? 'Configure Actions' : showPositionsConfig ? 'Start Positions' : showConfig ? 'Configuration' : showTemplates ? 'Templates' : showSettings ? 'Settings' : showHelp ? 'Help & Info' : 'Menu'}
+              {showMatches ? 'Matches' : showActionsConfig ? 'Configure Actions' : showPositionsConfig ? 'Start Positions' : showConfig ? 'Configuration' : showTemplates ? 'Configurations' : showSettings ? 'Settings' : showHelp ? 'Help & Info' : 'Menu'}
             </h2>
           </div>
 
@@ -484,9 +484,9 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                   </div>
                 </button>
 
-                {/* Templates Section - Moved here */}
+                {/* Configurations Section */}
                 <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
-                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Templates</h4>
+                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Configurations</h4>
                   
                   <button
                     onClick={() => {
@@ -497,7 +497,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                     <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    <span className="font-medium text-gray-800 dark:text-gray-100">Save as Template</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-100">Save Configuration</span>
                   </button>
 
                   <button
@@ -511,7 +511,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                       <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">Load Template</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-100">Load Configuration</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {presets.length > 0 && (
@@ -543,7 +543,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 </div>
 
                 <div className="pt-4 border-t border-gray-200 dark:border-slate-800 mt-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Advanced configuration for actions, positions, and templates. Changes apply to all matches.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Advanced configuration for actions, positions, and saved configurations. Changes apply to all matches.</p>
                 </div>
               </div>
             ) : showHelp ? (
@@ -736,13 +736,13 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 onExportConfig={onExportConfig}
               />
             ) : (
-              // Templates Submenu
+              // Configurations Submenu
               <div>
-                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-3">Saved Templates</h3>
+                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-3">Saved Configurations</h3>
 
                 {presets.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                    <p className="text-gray-500 dark:text-gray-300 text-sm">No templates saved yet</p>
+                    <p className="text-gray-500 dark:text-gray-300 text-sm">No configurations saved yet</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -763,7 +763,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                           </button>
                           <button
                             onClick={() => {
-                              if (confirm(`Delete template "${preset.name}"?`)) {
+                              if (confirm(`Delete configuration "${preset.name}"?`)) {
                                 onDeletePreset(preset.id);
                               }
                             }}

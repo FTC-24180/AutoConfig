@@ -168,13 +168,22 @@ function App() {
 
         <HamburgerMenu ref={hamburgerMenuRef} {...menuProps} />
 
-        {/* Modals - Remove these as they're no longer needed */}
-        {/* ManageActionsModal and ManageStartPositionsModal removed */}
+        {/* Save Template Modal */}
+        {showSaveTemplate && (
+          <SaveTemplateModal
+            templateName={templateName}
+            onTemplateNameChange={setTemplateName}
+            onSave={handleSaveTemplate}
+            onClose={closeSaveTemplate}
+          />
+        )}
 
+        {/* Load Template Modal */}
         {showLoadTemplate && (
           <LoadTemplateModal
             presets={presets}
             onLoadPreset={loadPreset}
+            onDeletePreset={deletePreset}
             onClose={() => setShowLoadTemplate(false)}
           />
         )}
@@ -232,6 +241,7 @@ function App() {
         <LoadTemplateModal
           presets={presets}
           onLoadPreset={loadPreset}
+          onDeletePreset={deletePreset}
           onClose={() => setShowLoadTemplate(false)}
         />
       )}
