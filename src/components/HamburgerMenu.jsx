@@ -173,11 +173,15 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       }
       
       if (clearDataOptions.actionGroups) {
-        localStorage.removeItem('ftc-autoconfig-action-groups');
+        // Set to empty object instead of removing to prevent defaults from loading
+        localStorage.setItem('ftc-autoconfig-action-groups', JSON.stringify({}));
+        // Keep the initialized flag so it knows actions were intentionally cleared
+        localStorage.setItem('ftc-autoconfig-actions-initialized', 'true');
       }
       
       if (clearDataOptions.startPositions) {
-        localStorage.removeItem('ftc-autoconfig-start-positions');
+        // Set to empty array instead of removing
+        localStorage.setItem('ftc-autoconfig-start-positions', JSON.stringify([]));
       }
       
       if (clearDataOptions.themePreference) {

@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 
-const DEFAULT_START_POSITIONS = [
-  { id: 'front', label: 'Front' },
-  { id: 'back', label: 'Back' }
-];
-
 const START_POSITIONS_STORAGE_KEY = 'ftc-autoconfig-start-positions';
 
 export function useStartPositions() {
@@ -13,7 +8,8 @@ export function useStartPositions() {
       const raw = localStorage.getItem(START_POSITIONS_STORAGE_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) { /* ignore */ }
-    return DEFAULT_START_POSITIONS;
+    // Default to empty array - users can add their own positions
+    return [];
   });
 
   useEffect(() => {
