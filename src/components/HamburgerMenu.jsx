@@ -566,7 +566,10 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
 
                 {/* Configurations Section */}
                 <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
-                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Configurations</h4>
+                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Stored Configurations</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 italic">
+                    Store named snapshot of current configuration.
+                  </p>
                   
                   <button
                     onClick={() => {
@@ -575,9 +578,11 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                     className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
                   >
                     <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
                     </svg>
-                    <span className="font-medium text-gray-800 dark:text-gray-100">Save</span>
+                    <div>
+                      <div className="font-medium text-gray-800 dark:text-gray-100">Store</div>                    
+                    </div>
                   </button>
 
                   <button
@@ -623,7 +628,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 </div>
 
                 <div className="pt-4 border-t border-gray-200 dark:border-slate-800 mt-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Advanced configuration for actions, positions, and saved configurations. Changes apply to all matches.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Advanced configuration for actions, positions, and stored configurations. Changes apply to all matches.</p>
                 </div>
               </div>
             ) : showHelp ? (
@@ -673,7 +678,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
             ) : showTemplates ? (
               // Configurations Submenu
               <div>
-                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-3">Saved Configurations</h3>
+                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-3">Stored Configurations</h3>
 
                 {presets.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-lg">
