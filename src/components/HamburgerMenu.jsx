@@ -83,6 +83,13 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   const [showDeleteMatchModal, setShowDeleteMatchModal] = useState(false);
   const [matchToDelete, setMatchToDelete] = useState(null);
   const [previewConfig, setPreviewConfig] = useState(null);
+  const [clearDataOptions, setClearDataOptions] = useState({
+    matches: true,
+    templates: false,  // Default to unchecked
+    actionGroups: true,
+    startPositions: true,
+    themePreference: true
+  });
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
@@ -135,6 +142,14 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   };
 
   const handleClearAllData = () => {
+    // Reset options to defaults when opening modal
+    setClearDataOptions({
+      matches: true,
+      templates: false,
+      actionGroups: true,
+      startPositions: true,
+      themePreference: true
+    });
     setShowClearDataModal(true);
   };
 
@@ -147,8 +162,27 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     setShowConfirmClearModal(false);
     
     try {
-      // Clear all localStorage
-      localStorage.clear();
+      // Clear selected data types based on checkboxes
+      if (clearDataOptions.matches) {
+        localStorage.removeItem('ftc-autoconfig-matches');
+        localStorage.removeItem('ftc-autoconfig-current-match');
+      }
+      
+      if (clearDataOptions.templates) {
+        localStorage.removeItem('ftc-autoconfig-presets');
+      }
+      
+      if (clearDataOptions.actionGroups) {
+        localStorage.removeItem('ftc-autoconfig-action-groups');
+      }
+      
+      if (clearDataOptions.startPositions) {
+        localStorage.removeItem('ftc-autoconfig-start-positions');
+      }
+      
+      if (clearDataOptions.themePreference) {
+        localStorage.removeItem('autoconfig-theme-preference');
+      }
       
       // Show success modal
       setShowSuccessModal(true);
@@ -690,12 +724,15 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
         isOpen={showClearDataModal}
         onClose={() => setShowClearDataModal(false)}
         onConfirm={handleFirstConfirmation}
+        options={clearDataOptions}
+        onOptionsChange={setClearDataOptions}
       />
 
       <ConfirmClearDataModal
         isOpen={showConfirmClearModal}
         onClose={() => setShowConfirmClearModal(false)}
         onConfirm={handleFinalConfirmation}
+        options={clearDataOptions}
       />
 
       <ClearDataSuccessModal

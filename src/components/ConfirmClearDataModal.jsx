@@ -1,5 +1,12 @@
-export function ConfirmClearDataModal({ isOpen, onClose, onConfirm }) {
+export function ConfirmClearDataModal({ isOpen, onClose, onConfirm, options }) {
   if (!isOpen) return null;
+
+  const selectedItems = [];
+  if (options?.matches) selectedItems.push('Match Data');
+  if (options?.templates) selectedItems.push('Saved Configurations');
+  if (options?.actionGroups) selectedItems.push('Custom Actions');
+  if (options?.startPositions) selectedItems.push('Start Positions');
+  if (options?.themePreference) selectedItems.push('Theme Preference');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4 safe-area">
@@ -23,8 +30,23 @@ export function ConfirmClearDataModal({ isOpen, onClose, onConfirm }) {
           <p className="text-gray-700 dark:text-gray-300 text-center text-lg font-semibold mb-3">
             Are you absolutely sure?
           </p>
-          <p className="text-gray-600 dark:text-gray-400 text-center text-sm">
-            This will delete <strong className="text-red-600 dark:text-red-400">ALL</strong> of your data and cannot be recovered.
+          <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-4">
+            This will permanently delete the following:
+          </p>
+          
+          <ul className="space-y-2 mb-4">
+            {selectedItems.map((item, index) => (
+              <li key={index} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <p className="text-red-600 dark:text-red-400 text-center text-sm font-semibold">
+            This action cannot be undone!
           </p>
         </div>
 
@@ -40,7 +62,7 @@ export function ConfirmClearDataModal({ isOpen, onClose, onConfirm }) {
             onClick={onConfirm}
             className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg font-bold transition min-h-[48px] touch-manipulation"
           >
-            Yes, Delete All
+            Yes, Delete
           </button>
         </div>
       </div>
