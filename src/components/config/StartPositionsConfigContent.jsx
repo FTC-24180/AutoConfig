@@ -44,19 +44,9 @@ export function StartPositionsConfigContent({
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Configure preset starting positions
-        </p>
-        {onExportConfig && (
-          <button 
-            onClick={onExportConfig} 
-            className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex-shrink-0"
-          >
-            Export
-          </button>
-        )}
-      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        Configure preset starting positions
+      </p>
 
       <div className="space-y-2">
         {startPositions.map((pos, idx) => (

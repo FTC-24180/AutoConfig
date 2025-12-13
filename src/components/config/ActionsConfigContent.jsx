@@ -161,19 +161,9 @@ export function ActionsConfigContent({
 }) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Manage action groups and types
-        </p>
-        {onExportConfig && (
-          <button 
-            onClick={onExportConfig} 
-            className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 flex-shrink-0"
-          >
-            Export
-          </button>
-        )}
-      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        Manage action groups and types
+      </p>
 
       {Object.entries(actionGroups).map(([gk, group]) => (
         <div key={gk} className="border border-gray-300 dark:border-slate-700 p-2 rounded bg-gray-50 dark:bg-slate-800">
