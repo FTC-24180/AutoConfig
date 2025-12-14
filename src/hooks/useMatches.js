@@ -115,7 +115,8 @@ export function useMatches() {
             team_number: partnerTeam ? parseInt(partnerTeam) || 0 : 0,
             auto: {
               startPosition: startPosition,
-              actions: actions.map(({ id, label, ...rest }) => rest)
+              // Keep type (id) and label, omit only internal UUID
+              actions: actions.map(({ id, ...rest }) => rest)
             }
           }
         }
@@ -136,7 +137,8 @@ export function useMatches() {
           team_number: match.partnerTeam ? parseInt(match.partnerTeam) || 0 : 0,
           auto: {
             startPosition: match.startPosition,
-            actions: match.actions.map(({ id, label, ...rest }) => rest)
+            // Keep type (id) and label, omit only internal UUID
+            actions: match.actions.map(({ id, ...rest }) => rest)
           }
         }
       }
@@ -156,7 +158,9 @@ export function useMatches() {
           startPosition: matchData.alliance?.auto?.startPosition || matchData.startPosition || { type: 'front' },
           actions: (matchData.alliance?.auto?.actions || matchData.actions || []).map(action => ({
             ...action,
+            // Generate new internal UUID for this instance
             id: crypto.randomUUID(),
+            // Ensure label exists (should always be present now)
             label: action.label || action.type
           }))
         };

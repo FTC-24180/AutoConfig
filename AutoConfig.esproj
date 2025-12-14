@@ -9,6 +9,7 @@
     <StartupCommand>npm run dev</StartupCommand>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="public\schemas\" />
     <Folder Include="scripts\" />
   </ItemGroup>
 </Project>
