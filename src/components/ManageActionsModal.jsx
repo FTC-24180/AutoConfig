@@ -1,39 +1,5 @@
 import { useState } from 'react';
-
-function AddGroupForm({ onAdd }) {
-  const [key, setKey] = useState('');
-  const [label, setLabel] = useState('');
-  return (
-    <div className="flex gap-2 items-center border-t pt-3 mt-3">
-      <input
-        placeholder="group key (e.g. custom)"
-        value={key}
-        onChange={(e) => setKey(e.target.value)}
-        className="px-2 py-1 border border-gray-300 rounded"
-      />
-      <input
-        placeholder="label"
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        className="px-2 py-1 border border-gray-300 rounded"
-      />
-      <button
-        onClick={() => {
-          if (!key) return;
-          onAdd(key, label);
-          setKey('');
-          setLabel('');
-        }}
-        className="flex items-center gap-1 py-1 px-3 bg-green-600 hover:bg-green-700 text-white rounded transition"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        Add Group
-      </button>
-    </div>
-  );
-}
+import { AddItemForm } from './common/AddItemForm';
 
 function AddActionForm({ groupKey, onAdd }) {
   const [id, setId] = useState('');
@@ -63,23 +29,23 @@ function AddActionForm({ groupKey, onAdd }) {
               placeholder="action id"
               value={id}
               onChange={(e) => setId(e.target.value)}
-              className="px-2 py-1 border border-gray-300 rounded w-32 text-sm"
+              className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded w-32 text-sm"
             />
             <input
               placeholder="label"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              className="px-2 py-1 border border-gray-300 rounded flex-1 text-sm"
+              className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded flex-1 text-sm"
             />
           </div>
 
           {configPairs.length > 0 && (
             <div className="pl-4 space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-600 font-semibold">Configuration Fields:</span>
-                <span className="text-xs text-gray-500 italic">(default values)</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400 font-semibold">Configuration Fields:</span>
+                <span className="text-xs text-gray-500 dark:text-gray-500 italic">(default values)</span>
               </div>
-              <div className="flex gap-2 text-xs text-gray-500 mb-1 font-semibold">
+              <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1 font-semibold">
                 <span className="w-24">Key Name</span>
                 <span className="w-20">Type</span>
                 <span className="flex-1">Default Value</span>
@@ -91,12 +57,12 @@ function AddActionForm({ groupKey, onAdd }) {
                     placeholder="e.g. waitTime"
                     value={pair.key}
                     onChange={(e) => updateConfigPair(idx, 'key', e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded w-24 text-xs"
+                    className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded w-24 text-xs"
                   />
                   <select
                     value={pair.type}
                     onChange={(e) => updateConfigPair(idx, 'type', e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded w-20 text-xs"
+                    className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded w-20 text-xs"
                   >
                     <option value="number">Number</option>
                     <option value="text">Text</option>
@@ -106,11 +72,11 @@ function AddActionForm({ groupKey, onAdd }) {
                     type={pair.type === 'number' ? 'number' : 'text'}
                     value={pair.value}
                     onChange={(e) => updateConfigPair(idx, 'value', e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded flex-1 text-xs"
+                    className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded flex-1 text-xs"
                   />
                   <button
                     onClick={() => removeConfigPair(idx)}
-                    className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-red-600 hover:text-red-700 transition"
+                    className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-slate-700 text-red-600 hover:text-red-700 transition"
                     title="Remove field"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +90,7 @@ function AddActionForm({ groupKey, onAdd }) {
 
           <button
             onClick={addConfigPair}
-            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+            className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -156,7 +122,7 @@ function AddActionForm({ groupKey, onAdd }) {
             setLabel('');
             setConfigPairs([]);
           }}
-          className="py-1 px-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition"
+          className="py-1 px-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition"
         >
           Add
         </button>
@@ -341,7 +307,7 @@ export function ManageActionsModal({
                         newConfig[`field${Object.keys(newConfig).length + 1}`] = 0;
                         onUpdateActionInGroup(gk, idx, { config: newConfig });
                       }}
-                      className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 ml-4 mt-1 font-semibold"
+                      className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 ml-4 mt-1 font-semibold"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -356,7 +322,15 @@ export function ManageActionsModal({
             </div>
           ))}
 
-          <AddGroupForm onAdd={onAddCustomGroup} />
+          <AddItemForm
+            onAdd={onAddCustomGroup}
+            idPlaceholder="group key (e.g. custom)"
+            labelPlaceholder="label"
+            buttonText="Add Group"
+            buttonColor="bg-green-600 hover:bg-green-700"
+            separateArgs={true}
+            className="border-t pt-3 mt-3"
+          />
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { ConfirmClearDataModal } from './ConfirmClearDataModal';
 import { ClearDataSuccessModal } from './ClearDataSuccessModal';
 import { DeleteConfigurationModal } from './DeleteConfigurationModal';
 import { DeleteMatchModal } from './DeleteMatchModal';
+import { removeStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
 const THEME_OPTIONS = [
   { 
@@ -165,28 +166,28 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     try {
       // Clear selected data types based on checkboxes
       if (clearDataOptions.matches) {
-        localStorage.removeItem('ftc-autoconfig-matches');
-        localStorage.removeItem('ftc-autoconfig-current-match');
+        removeStorageItem(STORAGE_KEYS.MATCHES);
+        removeStorageItem(STORAGE_KEYS.CURRENT_MATCH);
       }
       
       if (clearDataOptions.templates) {
-        localStorage.removeItem('ftc-autoconfig-presets');
+        removeStorageItem(STORAGE_KEYS.PRESETS);
       }
       
       if (clearDataOptions.actionGroups) {
         // Set to empty object instead of removing to prevent defaults from loading
-        localStorage.setItem('ftc-autoconfig-action-groups', JSON.stringify({}));
+        setStorageItem(STORAGE_KEYS.ACTION_GROUPS, {});
         // Keep the initialized flag so it knows actions were intentionally cleared
-        localStorage.setItem('ftc-autoconfig-actions-initialized', 'true');
+        setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
       }
       
       if (clearDataOptions.startPositions) {
         // Set to empty array instead of removing
-        localStorage.setItem('ftc-autoconfig-start-positions', JSON.stringify([]));
+        setStorageItem(STORAGE_KEYS.START_POSITIONS, []);
       }
       
       if (clearDataOptions.themePreference) {
-        localStorage.removeItem('autoconfig-theme-preference');
+        removeStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
       }
       
       // Show success modal

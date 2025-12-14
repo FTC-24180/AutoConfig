@@ -1,48 +1,25 @@
 import { useState, useEffect } from 'react';
-
-const MATCHES_STORAGE_KEY = 'ftc-autoconfig-matches';
-const CURRENT_MATCH_KEY = 'ftc-autoconfig-current-match';
+import { getStorageItem, setStorageItem, removeStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
 export function useMatches() {
   const [matches, setMatches] = useState(() => {
-    try {
-      const raw = localStorage.getItem(MATCHES_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-      }
-    } catch (e) {
-      console.error('Failed to load matches:', e);
-    }
-    return [];
+    const parsed = getStorageItem(STORAGE_KEYS.MATCHES, []);
+    return Array.isArray(parsed) ? parsed : [];
   });
 
   const [currentMatchId, setCurrentMatchId] = useState(() => {
-    try {
-      const saved = localStorage.getItem(CURRENT_MATCH_KEY);
-      return saved ? saved : null;
-    } catch (e) {
-      return null;
-    }
+    return getStorageItem(STORAGE_KEYS.CURRENT_MATCH, null);
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(MATCHES_STORAGE_KEY, JSON.stringify(matches));
-    } catch (e) {
-      console.error('Failed to save matches:', e);
-    }
+    setStorageItem(STORAGE_KEYS.MATCHES, matches);
   }, [matches]);
 
   useEffect(() => {
-    try {
-      if (currentMatchId) {
-        localStorage.setItem(CURRENT_MATCH_KEY, currentMatchId);
-      } else {
-        localStorage.removeItem(CURRENT_MATCH_KEY);
-      }
-    } catch (e) {
-      console.error('Failed to save current match:', e);
+    if (currentMatchId) {
+      setStorageItem(STORAGE_KEYS.CURRENT_MATCH, currentMatchId);
+    } else {
+      removeStorageItem(STORAGE_KEYS.CURRENT_MATCH);
     }
   }, [currentMatchId]);
 

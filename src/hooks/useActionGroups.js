@@ -1,4 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
+import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
+import { downloadJSON } from '../utils/configUtils';
 
 const DEFAULT_ACTION_GROUPS = {
   launch: {
@@ -38,43 +40,34 @@ const DEFAULT_ACTION_GROUPS = {
   }
 };
 
-const ACTIONS_STORAGE_KEY = 'ftc-autoconfig-action-groups';
-const ACTIONS_INITIALIZED_KEY = 'ftc-autoconfig-actions-initialized';
-
 export function useActionGroups() {
   const [actionGroups, setActionGroups] = useState(() => {
-    try {
-      const raw = localStorage.getItem(ACTIONS_STORAGE_KEY);
-      if (raw) {
-        const loaded = JSON.parse(raw);
-        // Migration: Remove start group if it exists
-        if (loaded.start) {
-          delete loaded.start;
-          localStorage.setItem(ACTIONS_STORAGE_KEY, JSON.stringify(loaded));
-        }
-        return loaded;
+    const loaded = getStorageItem(STORAGE_KEYS.ACTION_GROUPS, null);
+    
+    if (loaded) {
+      // Migration: Remove start group if it exists
+      if (loaded.start) {
+        delete loaded.start;
+        setStorageItem(STORAGE_KEYS.ACTION_GROUPS, loaded);
       }
-      
-      // Check if actions were previously initialized
-      const wasInitialized = localStorage.getItem(ACTIONS_INITIALIZED_KEY);
-      if (wasInitialized === 'true') {
-        // Actions were cleared intentionally, return empty
-        return {};
-      }
-      
-      // First time - use defaults
-      localStorage.setItem(ACTIONS_INITIALIZED_KEY, 'true');
-      return DEFAULT_ACTION_GROUPS;
-    } catch (e) { 
-      return DEFAULT_ACTION_GROUPS;
+      return loaded;
     }
+    
+    // Check if actions were previously initialized
+    const wasInitialized = getStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, null);
+    if (wasInitialized === 'true') {
+      // Actions were cleared intentionally, return empty
+      return {};
+    }
+    
+    // First time - use defaults
+    setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
+    return DEFAULT_ACTION_GROUPS;
   });
 
   useEffect(() => {
-    try { 
-      localStorage.setItem(ACTIONS_STORAGE_KEY, JSON.stringify(actionGroups));
-      localStorage.setItem(ACTIONS_INITIALIZED_KEY, 'true');
-    } catch (e) {}
+    setStorageItem(STORAGE_KEYS.ACTION_GROUPS, actionGroups);
+    setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
   }, [actionGroups]);
 
   const addCustomGroup = (key, label) => {
@@ -119,15 +112,7 @@ export function useActionGroups() {
 
   const exportConfig = () => {
     const combinedConfig = { actionGroups };
-    const blob = new Blob([JSON.stringify(combinedConfig, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ftc-config.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadJSON(combinedConfig, `ftc-config.json`);
   };
 
   return {

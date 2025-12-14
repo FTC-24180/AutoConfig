@@ -1,39 +1,4 @@
-import { useState } from 'react';
-
-function AddStartPositionForm({ onAdd }) {
-  const [id, setId] = useState('');
-  const [label, setLabel] = useState('');
-  return (
-    <div className="flex flex-col gap-2 mt-2">
-      <input
-        placeholder="position id"
-        value={id}
-        onChange={(e) => setId(e.target.value)}
-        className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded text-xs w-full"
-      />
-      <input
-        placeholder="label"
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded text-xs w-full"
-      />
-      <button
-        onClick={() => {
-          if (!id) return;
-          onAdd({ id, label: label || id });
-          setId('');
-          setLabel('');
-        }}
-        className="flex items-center justify-center gap-1 py-1 px-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-      >
-        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        Add Position
-      </button>
-    </div>
-  );
-}
+import { AddItemForm } from '../common/AddItemForm';
 
 export function StartPositionsConfigContent({
   startPositions,
@@ -83,7 +48,19 @@ export function StartPositionsConfigContent({
           </div>
         ))}
 
-        <AddStartPositionForm onAdd={onAddStartPosition} />
+        <AddItemForm
+          onAdd={onAddStartPosition}
+          idPlaceholder="position id"
+          labelPlaceholder="label"
+          buttonText="Add Position"
+          layout="vertical"
+          className="mt-2"
+          buttonIcon={
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          }
+        />
       </div>
 
       <div className="p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">

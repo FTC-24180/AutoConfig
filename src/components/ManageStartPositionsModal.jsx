@@ -1,39 +1,4 @@
-import { useState } from 'react';
-
-function AddStartPositionForm({ onAdd }) {
-  const [id, setId] = useState('');
-  const [label, setLabel] = useState('');
-  return (
-    <div className="flex gap-2 items-center mt-2">
-      <input
-        placeholder="position id (e.g. left)"
-        value={id}
-        onChange={(e) => setId(e.target.value)}
-        className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded w-40"
-      />
-      <input
-        placeholder="label"
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        className="px-2 py-1 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded flex-1"
-      />
-      <button
-        onClick={() => {
-          if (!id) return;
-          onAdd({ id, label: label || id });
-          setId('');
-          setLabel('');
-        }}
-        className="flex items-center gap-1 py-1 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-        Add
-      </button>
-    </div>
-  );
-}
+import { AddItemForm } from './common/AddItemForm';
 
 export function ManageStartPositionsModal({
   startPositions,
@@ -106,7 +71,13 @@ export function ManageStartPositionsModal({
             </div>
           ))}
 
-          <AddStartPositionForm onAdd={onAddStartPosition} />
+          <AddItemForm 
+            onAdd={onAddStartPosition}
+            idPlaceholder="position id (e.g. left)"
+            labelPlaceholder="label"
+            buttonText="Add"
+            className="mt-2"
+          />
         </div>
 
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded">

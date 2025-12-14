@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
+import { removeStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
-const STORAGE_KEY = 'autoconfig-theme-preference';
 const VALID_PREFERENCES = new Set(['light', 'dark', 'system']);
 
 const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -9,8 +9,13 @@ const getStoredPreference = () => {
   if (!isBrowser()) {
     return 'system';
   }
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return VALID_PREFERENCES.has(stored) ? stored : 'system';
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.THEME_PREFERENCE);
+    return VALID_PREFERENCES.has(stored) ? stored : 'system';
+  } catch (e) {
+    console.error('Failed to load theme preference:', e);
+    return 'system';
+  }
 };
 
 const getMediaQuery = () => {
@@ -72,9 +77,13 @@ export function useThemePreference() {
     }
 
     if (preference === 'system') {
-      localStorage.removeItem(STORAGE_KEY);
+      removeStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
     } else {
-      localStorage.setItem(STORAGE_KEY, preference);
+      try {
+        localStorage.setItem(STORAGE_KEYS.THEME_PREFERENCE, preference);
+      } catch (e) {
+        console.error('Failed to save theme preference:', e);
+      }
     }
   }, [preference]);
 

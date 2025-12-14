@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react';
-
-const START_POSITIONS_STORAGE_KEY = 'ftc-autoconfig-start-positions';
+import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
 export function useStartPositions() {
   const [startPositions, setStartPositions] = useState(() => {
-    try {
-      const raw = localStorage.getItem(START_POSITIONS_STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) { /* ignore */ }
-    // Default to empty array - users can add their own positions
-    return [];
+    return getStorageItem(STORAGE_KEYS.START_POSITIONS, []);
   });
 
   useEffect(() => {
-    try { 
-      localStorage.setItem(START_POSITIONS_STORAGE_KEY, JSON.stringify(startPositions)); 
-    } catch (e) {}
+    setStorageItem(STORAGE_KEYS.START_POSITIONS, startPositions);
   }, [startPositions]);
 
   const addStartPosition = (position) => {

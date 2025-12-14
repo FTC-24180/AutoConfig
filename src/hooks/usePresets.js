@@ -1,24 +1,14 @@
 import { useState, useEffect } from 'react';
-
-const loadInitialPresets = () => {
-  const savedPresets = localStorage.getItem('ftc-autoconfig-presets');
-  if (savedPresets) {
-    try {
-      return JSON.parse(savedPresets);
-    } catch (e) {
-      console.error('Failed to load presets:', e);
-      return [];
-    }
-  }
-  return [];
-};
+import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
 export function usePresets() {
-  const [presets, setPresets] = useState(loadInitialPresets);
+  const [presets, setPresets] = useState(() => {
+    return getStorageItem(STORAGE_KEYS.PRESETS, []);
+  });
 
   useEffect(() => {
     if (presets.length > 0) {
-      localStorage.setItem('ftc-autoconfig-presets', JSON.stringify(presets));
+      setStorageItem(STORAGE_KEYS.PRESETS, presets);
     }
   }, [presets]);
 
