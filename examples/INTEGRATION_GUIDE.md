@@ -73,6 +73,42 @@ public class AutoMatch1 extends LinearOpMode {
 }
 ```
 
+## QR Code Scanner with Limelight 3A
+
+### Overview
+
+Use the `LimelightQRScannerOpMode` to scan QR codes from the AutoConfig web app directly onto your robot controller using the goBILDA Limelight 3A camera.
+
+### Quick Setup
+
+1. **Configure Limelight** for barcode detection (Pipeline 0)
+2. **Copy files** to TeamCode:
+   - `LimelightQRScannerOpMode.java`
+   - `AutoConfigParser.java`
+   - `MatchDataModels.java`
+3. **Run OpMode** and scan QR codes
+4. **Save** unified JSON to `/sdcard/FIRST/match-data.json`
+
+### Usage
+
+```java
+// No code needed! Use the scanner OpMode:
+// 1. Select "Limelight QR Scanner" on Driver Station
+// 2. Point camera at QR code
+// 3. Press A to scan
+// 4. Press B to save
+```
+
+### Benefits
+
+- ? No manual file transfer needed
+- ? Scan multiple QR codes and merge automatically
+- ? Validate JSON format before saving
+- ? Real-time preview and error handling
+- ? Perfect for quick match-to-match updates
+
+**See full documentation**: [Limelight QR Scanner Guide](LIMELIGHT_QR_SCANNER_GUIDE.md)
+
 ## Data Structure Reference
 
 ### Root Object
