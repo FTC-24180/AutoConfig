@@ -299,7 +299,7 @@ public class LimelightQRScannerOpMode extends LinearOpMode {
             // Set preview state
             currentState = OpModeState.PREVIEWING;
             statusMessage = "QR Code Preview (Press any button to exit)";
-            statusDetail = "Type: " + barcode.getType() + "\n" +
+            statusDetail = "Family: " + barcode.getFamily() + "\n" +
                           "Length: " + qrData.length() + " characters\n\n" +
                           "Data: " + qrData.substring(0, Math.min(200, qrData.length())) +
                           (qrData.length() > 200 ? "\n... (" + (qrData.length() - 200) + " more chars)" : "");

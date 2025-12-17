@@ -2,17 +2,21 @@ package org.firstinspires.ftc.teamcode.auto.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Parser for FTC AutoConfig match data JSON files
  * Schema Version: 1.0.0
+ * 
+ * Compatible with Android API Level 24+ (Java 8)
  * 
  * Usage:
  *   AutoConfigParser parser = new AutoConfigParser();
@@ -50,12 +54,12 @@ public class AutoConfigParser {
      * @throws IllegalArgumentException If JSON is invalid or version unsupported
      */
     public MatchDataConfig parseJson(String jsonString) {
-        JsonObject root = JsonParser.parseString(jsonString).getAsJsonObject();
+        JsonObject root = gson.fromJson(jsonString, JsonObject.class);
         return parseRoot(root);
     }
     
     private MatchDataConfig parseFromReader(FileReader reader) {
-        JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+        JsonObject root = gson.fromJson(reader, JsonObject.class);
         return parseRoot(root);
     }
     
@@ -72,17 +76,18 @@ public class AutoConfigParser {
         }
         
         // Parse matches array or single match
-        List<MatchWrapper> matchWrappers;
+        List<MatchDataConfig.MatchWrapper> matchWrappers;
         
         if (root.has("matches")) {
             // Standard format with matches array
-            Type listType = new TypeToken<List<MatchWrapper>>(){}.getType();
+            Type listType = new TypeToken<List<MatchDataConfig.MatchWrapper>>(){}.getType();
             matchWrappers = gson.fromJson(root.get("matches"), listType);
         } else if (root.has("match")) {
             // Legacy single match format
-            MatchWrapper wrapper = new MatchWrapper();
-            wrapper.match = gson.fromJson(root.get("match"), Match.class);
-            matchWrappers = List.of(wrapper);
+            MatchDataConfig.MatchWrapper wrapper = new MatchDataConfig.MatchWrapper();
+            wrapper.match = gson.fromJson(root.get("match"), MatchDataConfig.Match.class);
+            // Use Collections.singletonList() instead of List.of() for API 24 compatibility
+            matchWrappers = Collections.singletonList(wrapper);
         } else {
             throw new IllegalArgumentException("Invalid JSON: missing 'matches' or 'match' field");
         }
@@ -111,12 +116,12 @@ public class AutoConfigParser {
      * @param matchNumber Match number to find
      * @return Match object or null if not found
      */
-    public Match getMatchByNumber(MatchDataConfig config, int matchNumber) {
+    public MatchDataConfig.Match getMatchByNumber(MatchDataConfig config, int matchNumber) {
         if (config == null || config.matches == null) {
             return null;
         }
         
-        for (MatchWrapper wrapper : config.matches) {
+        for (MatchDataConfig.MatchWrapper wrapper : config.matches) {
             if (wrapper.match != null && wrapper.match.number == matchNumber) {
                 return wrapper.match;
             }
@@ -131,16 +136,17 @@ public class AutoConfigParser {
      * @param color Alliance color ("red" or "blue")
      * @return List of matches for the specified alliance
      */
-    public List<Match> getMatchesByAlliance(MatchDataConfig config, String color) {
+    public List<MatchDataConfig.Match> getMatchesByAlliance(MatchDataConfig config, String color) {
         if (config == null || config.matches == null) {
-            return List.of();
+            return Collections.emptyList();
         }
         
+        // Use Collectors.toList() instead of .toList() for API 24 compatibility
         return config.matches.stream()
             .map(wrapper -> wrapper.match)
             .filter(match -> match != null && 
                            match.alliance != null && 
                            color.equalsIgnoreCase(match.alliance.color))
-            .toList();
+            .collect(Collectors.toList());
     }
 }
