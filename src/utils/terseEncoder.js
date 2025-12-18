@@ -7,15 +7,6 @@
  * - Wait 1s, Action 1, Action 3, etc.
  */
 
-// Start position type to ID mapping
-const POSITION_TO_ID = {
-  'front': 1,
-  'back': 2,
-  'left': 3,
-  'right': 4,
-  'custom': 9
-};
-
 // Action type to ID mapping
 const ACTION_TO_ID = {
   'near_launch': 1,
@@ -29,6 +20,24 @@ const ACTION_TO_ID = {
   'corner': 9,
   'drive_to': 10
 };
+
+/**
+ * Extract position ID from position type
+ * @param {string} positionType - Position type in S{n} format (e.g., 'S0', 'S1', 'S2')
+ * @returns {number} Position ID
+ */
+function getPositionId(positionType) {
+  if (!positionType) return 1;
+  
+  // Extract numeric ID from S{n} format
+  if (positionType.startsWith('S')) {
+    const id = parseInt(positionType.substring(1));
+    return isNaN(id) ? 1 : id;
+  }
+  
+  // Fallback if format is unexpected
+  return 1;
+}
 
 /**
  * Encode a match to terse format
@@ -45,7 +54,7 @@ export function encodeMatchToTerse(match) {
   terse += match.alliance[0].toUpperCase();
   
   // Start position: S{id}
-  const posId = POSITION_TO_ID[match.startPosition?.type] || 1;
+  const posId = getPositionId(match.startPosition?.type);
   terse += `S${posId}`;
   
   // Actions: [W{sec}|A{id}]*

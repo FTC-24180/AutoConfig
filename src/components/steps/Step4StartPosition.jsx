@@ -7,14 +7,18 @@ export function Step4StartPosition({
   onUpdateField
 }) {
   const getStartPositionLabel = () => {
-    const pos = startPositions.find(p => p.id === startPosition.type);
+    // Check configured positions
+    const pos = startPositions.find(p => p.key === startPosition.type);
     if (pos) return pos.label;
-    if (startPosition.type === 'custom') {
+    
+    // Handle custom position (S0)
+    if (startPosition.type === 'S0') {
       const x = startPosition.x ?? 0;
       const y = startPosition.y ?? 0;
       const theta = startPosition.theta ?? 0;
       return `Custom (${x}, ${y}, ${theta}°)`;
     }
+    
     return 'Unknown';
   };
 
@@ -31,10 +35,10 @@ export function Step4StartPosition({
           <div className="grid grid-cols-2 gap-3">
             {startPositions.map(pos => (
               <button
-                key={pos.id}
-                onClick={() => onStartPositionChange({ type: pos.id })}
+                key={pos.key}
+                onClick={() => onStartPositionChange({ type: pos.key })}
                 className={`p-4 rounded-lg font-semibold transition-all ${
-                  startPosition.type === pos.id
+                  startPosition.type === pos.key
                     ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 shadow-lg'
                     : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-slate-700'
                 }`}
@@ -43,9 +47,9 @@ export function Step4StartPosition({
               </button>
             ))}
             <button
-              onClick={() => onStartPositionChange({ type: 'custom', x: 0, y: 0, theta: 0 })}
+              onClick={() => onStartPositionChange({ type: 'S0', x: 0, y: 0, theta: 0 })}
               className={`p-4 rounded-lg font-semibold transition-all ${
-                startPosition.type === 'custom'
+                startPosition.type === 'S0'
                   ? 'bg-indigo-600 text-white ring-4 ring-indigo-300 shadow-lg'
                   : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-slate-700'
               }`}
@@ -55,7 +59,7 @@ export function Step4StartPosition({
           </div>
         </div>
 
-        {startPosition.type === 'custom' && (
+        {startPosition.type === 'S0' && (
           <div className="bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 rounded-lg p-4">
             <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Custom Position</h4>
             <div className="grid grid-cols-3 gap-3">
