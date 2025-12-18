@@ -6,7 +6,17 @@
 - [ ] Pipeline 0 set to Barcode/QR Code detection mode
 - [ ] Gson dependency added to build.gradle
 - [ ] Helper classes copied to TeamCode
-- [ ] QR codes generated from AutoConfig web app
+- [ ] QR codes generated from AutoConfig web app (terse format)
+
+## QR Code Format
+
+**Terse Format:** `{n}[R|B]S{startPos}[W{sec}|A{actionId}]*`
+
+**Example:** `5RS1W1A1A3A1A4W1A1A5A1A6`
+- Match 5, Red, Start pos 1, actions with waits
+- Only 26 bytes!
+
+**No backward compatibility** - Only terse format supported
 
 ## ? Match Number = Primary Key
 
@@ -57,21 +67,24 @@ Result: 1(new), 3, 4, 5, 6, 7(new), 8
 | "SCANNING..." | Processing QR code |
 | "Success! Scanned X match(es)" | QR code added |
 | "Scanned Matches: X" | Total matches collected |
+| "Size: X bytes" | QR code size |
 
 ## Common Issues
 
 | Problem | Solution |
 |---------|----------|
 | No QR codes detected | Check pipeline mode, lighting, focus |
-| Parse Error | Verify QR is from AutoConfig app |
+| Parse Error | Verify QR uses terse format from web app |
 | Save Error | Check /sdcard/FIRST/ directory exists |
 | Limelight not found | Verify hardware config name |
 
 ## File Output
 
 - **Location**: `/sdcard/FIRST/match-data.json`
-- **Format**: Unified JSON with all scanned matches
+- **Format**: Standard JSON with all scanned matches
 - **Schema**: AutoConfig v1.0.0
+- **Input Format**: Terse format QR codes
+- **Output Format**: Standard JSON for OpModes
 - **Use in**: Any autonomous OpMode with AutoConfigParser
 
 ## Tips
@@ -82,6 +95,7 @@ Result: 1(new), 3, 4, 5, 6, 7(new), 8
 ? Test scan before competition  
 ? Back up previous data  
 ? Verify match count after scanning  
+? Terse format = ultra-compact (10-35 bytes typical)
 
 ## Limelight Pipeline Settings
 
@@ -109,4 +123,5 @@ public class AutoMatch1 extends LinearOpMode {
 
 ---
 
-**For detailed documentation**, see: [LIMELIGHT_QR_SCANNER_GUIDE.md](LIMELIGHT_QR_SCANNER_GUIDE.md)
+**Terse Format:** See [TERSE_FORMAT.md](TERSE_FORMAT.md)  
+**Full Guide:** See [LIMELIGHT_QR_SCANNER_GUIDE.md](LIMELIGHT_QR_SCANNER_GUIDE.md)

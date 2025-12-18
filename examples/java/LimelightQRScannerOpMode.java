@@ -6,8 +6,8 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.auto.config.AutoConfigParser;
 import org.firstinspires.ftc.teamcode.auto.config.MatchDataConfig;
+import org.firstinspires.ftc.teamcode.auto.config.TerseMatchCodec;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,8 +28,8 @@ import java.util.List;
  * 6. Saved file: /sdcard/FIRST/match-data.json
  * 
  * QR Code Format:
- * QR codes should contain complete match data JSON in the AutoConfig schema format.
- * Each QR code can contain one or more matches.
+ * QR codes use terse format: {n}[R|B]S{startPos}[W{sec}|A{actionId}]*
+ * Example: 5RS1W1A1A3A1A4W1A1A5A1A6
  * 
  * State-based design - no blocking sleeps, fully responsive to input
  */
@@ -59,7 +59,6 @@ public class LimelightQRScannerOpMode extends LinearOpMode {
     
     // Data storage
     private List<MatchDataConfig> scannedConfigs = new ArrayList<>();
-    private AutoConfigParser parser = new AutoConfigParser();
     
     @Override
     public void runOpMode() throws InterruptedException {
@@ -201,9 +200,9 @@ public class LimelightQRScannerOpMode extends LinearOpMode {
                 return;
             }
             
-            // Parse JSON from QR code
+            // Parse terse format only
             try {
-                MatchDataConfig config = parser.parseJson(qrData);
+                MatchDataConfig config = org.firstinspires.ftc.teamcode.auto.config.TerseMatchCodec.decodeConfig(qrData);
                 
                 if (config == null || config.matches == null || config.matches.isEmpty()) {
                     showMessage("Error: No matches in QR code", 
@@ -214,8 +213,9 @@ public class LimelightQRScannerOpMode extends LinearOpMode {
                 // Success - add to scanned configs
                 scannedConfigs.add(config);
                 showMessage("Success!", 
-                           "Scanned " + config.matches.size() + " match(es). " +
-                           "Total: " + getTotalMatchCount());
+                           "Scanned " + config.matches.size() + " match(es)\n" +
+                           "Total: " + getTotalMatchCount() + "\n" +
+                           "Size: " + qrData.length() + " bytes");
                 
             } catch (Exception e) {
                 showMessage("Parse Error: " + e.getMessage(), 
