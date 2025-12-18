@@ -50,6 +50,14 @@ export function Step6QRCode({ config, onDownload, matches, currentMatchId, onSel
   );
   const isCustomPosition = currentMatch?.startPosition?.type === 'S0';
 
+  // Generate action keys list
+  const actionsList = useMemo(() => {
+    if (!currentMatch?.actions || currentMatch.actions.length === 0) {
+      return 'None';
+    }
+    return currentMatch.actions.map(action => action.type).join(', ');
+  }, [currentMatch?.actions]);
+
   const handleMatchIndexChange = (newIndex) => {
     setSelectedMatchIndex(newIndex);
     // Update the app's current match when swiping/navigating
@@ -261,9 +269,9 @@ export function Step6QRCode({ config, onDownload, matches, currentMatchId, onSel
                 <span className="font-medium">Start Position:</span>
                 <span className="font-mono">{currentMatch.startPosition.type}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-col gap-1">
                 <span className="font-medium">Actions:</span>
-                <span>{currentMatch.actions.length}</span>
+                <span className="font-mono text-xs break-words">{actionsList}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">QR Size:</span>
@@ -354,7 +362,7 @@ export function Step6QRCode({ config, onDownload, matches, currentMatchId, onSel
                   </span>
                 )}
               </div>
-              <div><strong>Actions:</strong> {currentMatch.actions.length > 0 ? `${currentMatch.actions.length} actions` : 'None'}</div>
+              <div><strong>Actions:</strong> {actionsList}</div>
               <div><strong>Total Size:</strong> {terseInfo.size} bytes</div>
               <div>
                 <strong>QR Compatibility:</strong>{' '}

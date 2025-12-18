@@ -2,28 +2,29 @@
 import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
 // Fixed action groups - no customization allowed
+// Action keys follow {identifier}{ordinal} pattern: A1, A2, etc.
 const FIXED_ACTION_GROUPS = {
   actions: {
     label: 'Actions',
-    icon: '⚡',
+    icon: '\u26A1',
     actions: [
-      { id: 'near_launch', label: 'Near Launch' },
-      { id: 'far_launch', label: 'Far Launch' },
-      { id: 'spike_1', label: 'Spike 1' },
-      { id: 'spike_2', label: 'Spike 2' },
-      { id: 'spike_3', label: 'Spike 3' },
-      { id: 'near_park', label: 'Park (Near)' },
-      { id: 'far_park', label: 'Park (Far)' },
-      { id: 'dump', label: 'Dump' },
-      { id: 'corner', label: 'Corner' },
-      { id: 'drive_to', label: 'Drive To' }
+      { id: 'A1', label: 'Near Launch' },
+      { id: 'A2', label: 'Far Launch' },
+      { id: 'A3', label: 'Spike 1' },
+      { id: 'A4', label: 'Spike 2' },
+      { id: 'A5', label: 'Spike 3' },
+      { id: 'A6', label: 'Park (Near)' },
+      { id: 'A7', label: 'Park (Far)' },
+      { id: 'A8', label: 'Dump' },
+      { id: 'A9', label: 'Corner' },
+      { id: 'A10', label: 'Drive To' }
     ]
   },
   wait: {
     label: 'Wait',
-    icon: '⏱️',
+    icon: '\u23F1\uFE0F',
     actions: [
-      { id: 'wait', label: 'Wait', config: { waitTime: 1000 } }
+      { id: 'W', label: 'Wait', config: { waitTime: 1000 } }
     ]
   }
 };

@@ -5,8 +5,8 @@ export function useMatchHandlers(matchesHook, setCurrentStep) {
   };
 
   const handleSelectMatch = (matchId) => {
+    // Switch match without changing the current step
     matchesHook.setCurrentMatchId(matchId);
-    setCurrentStep(0); // Reset to first step when switching matches
   };
 
   const handleSelectMatchFromQRCode = (matchId) => {
