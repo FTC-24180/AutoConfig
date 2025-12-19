@@ -561,10 +561,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                       <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">📋 Duplicate Matches</h4>
                       <p className="text-xs text-gray-700 dark:text-gray-300">Tap the duplicate icon (📋) in the Matches menu to copy a match configuration</p>
                     </div>
-                    <div>
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-1 text-sm">📦 One QR Code per match</h4>
-                        <p className="text-xs text-gray-700 dark:text-gray-300">Generate individual QR codes per match for easy detection</p>
-                    </div>
                   </div>
                 </div>
 

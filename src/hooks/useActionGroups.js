@@ -191,12 +191,6 @@ export function useActionGroups() {
 
   const clearError = () => setError(null);
 
-  // Keep other group operations as no-ops for backwards compatibility with old code that still references them
-  // These functions don't actually do anything since groups are now fixed to 'actions' and 'wait'
-  const addCustomGroup = () => {};
-  const renameGroup = () => {};
-  const deleteGroup = () => {};
-
   return {
     actionGroups,
     addActionToGroup,
