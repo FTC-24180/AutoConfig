@@ -40,13 +40,35 @@ export function ActionPicker({
               {isExpanded && (
                 <div className="mt-2 space-y-2 pl-4">
                   {group.actions.map(action => {
+                    // Check if this action type is already in the action list
+                    // BUT allow multiple Wait actions (type 'W')
+                    const isAlreadyAdded = action.id !== 'W' && actionList.some(a => a.type === action.id);
+                    
                     return (
                       <button
                         key={action.id}
                         onClick={() => onAddAction(action)}
-                        className="w-full text-left p-3 min-h-[48px] touch-manipulation bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 border border-gray-200 dark:border-slate-700 rounded-lg transition"
+                        disabled={isAlreadyAdded}
+                        className={`w-full text-left p-3 min-h-[48px] touch-manipulation border rounded-lg transition ${
+                          isAlreadyAdded 
+                            ? 'bg-gray-100 dark:bg-slate-950 border-gray-300 dark:border-slate-800 opacity-50 cursor-not-allowed'
+                            : 'bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 border-gray-200 dark:border-slate-700'
+                        }`}
                       >
-                        <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{action.label}</span>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-sm font-medium ${
+                            isAlreadyAdded 
+                              ? 'text-gray-500 dark:text-gray-500'
+                              : 'text-gray-800 dark:text-gray-100'
+                          }`}>
+                            {action.label}
+                          </span>
+                          {isAlreadyAdded && (
+                            <span className="text-xs text-gray-500 dark:text-gray-500 italic">
+                              Already added
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}

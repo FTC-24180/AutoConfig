@@ -14,8 +14,19 @@ export function useWizardActions(matchesHook) {
   };
 
   const addAction = (action) => {
+    // Check if an action with this type already exists in the list
+    // BUT allow multiple Wait actions (type 'W')
+    const existingActions = currentMatch.actions || [];
+    const isDuplicate = action.id !== 'W' && existingActions.some(existingAction => existingAction.type === action.id);
+    
+    if (isDuplicate) {
+      // Show user feedback that this action is already in the list
+      alert(`Action "${action.label}" (${action.id}) is already in your sequence. Each action type can only be added once.`);
+      return;
+    }
+    
     const newAction = createNewAction(action);
-    const updatedActions = [...(currentMatch.actions || []), newAction];
+    const updatedActions = [...existingActions, newAction];
     updateCurrentMatch({ actions: updatedActions });
   };
 
