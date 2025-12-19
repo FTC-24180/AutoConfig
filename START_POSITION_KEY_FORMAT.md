@@ -1,4 +1,4 @@
-# Start Position Key Format - S{n}
+ï»¿# Start Position Key Format - S{n}
 
 ## Overview
 Start positions use a consistent `S{n}` key format where keys are auto-generated, immutable, and used in QR codes. Labels remain user-editable for display purposes only.
@@ -42,16 +42,16 @@ Start positions use a consistent `S{n}` key format where keys are auto-generated
 ### Bit Allocation
 - **X coordinate:** 12 bits (bits 0-11)
 - **Y coordinate:** 12 bits (bits 12-23)
-- **? heading:** 12 bits (bits 24-35)
+- **Î¸ heading:** 12 bits (bits 24-35)
 - **Total:** 36 bits = exactly 6 base64 characters
 
 ### Resolution
 - **X resolution:** 0.893 mm (0.0351 inches)
 - **Y resolution:** 0.893 mm (0.0351 inches)
-- **? resolution:** 0.088 degrees
-- **X range:** ±1.8288 meters (±72 inches)
-- **Y range:** ±1.8288 meters (±72 inches)
-- **? range:** ±180 degrees
+- **Î¸ resolution:** 0.088 degrees
+- **X range:** Â±1.8288 meters (Â±72 inches)
+- **Y range:** Â±1.8288 meters (Â±72 inches)
+- **Î¸ range:** Â±180 degrees
 
 ### Encoding Algorithm
 ```javascript
@@ -63,14 +63,14 @@ theta_units = round((theta_degrees + 180) * 4096 / 360)
 // Pack into 36 bits: [X:12bits][Y:12bits][?:12bits]
 // Bytes 0-1: X coordinate
 // Bytes 1-2: Y coordinate (spans byte boundary)
-// Bytes 3-4: ? heading
+// Bytes 3-4: Î¸ heading
 
 // Encode to 6 base64 characters
 base64_6_chars = encodeBase64(packed_36_bits)
 ```
 
 ### Example
-**Position:** X=0.6m, Y=-0.3m, ?=90°
+**Position:** X=0.6m, Y=-0.3m, Î¸=90Â°
 
 ```
 X units: (0.6+1.8288) * 4096/3.6576 = 2721
@@ -89,13 +89,13 @@ QR Code: S0qrG8AA
 ? **Universal standard:** Meters are international  
 ? **Simple math:** Powers of 10, no fraction confusion  
 ? **Perfect packing:** 36 bits = exactly 6 base64 chars  
-? **Field coverage:** ±1.83m covers full FTC field  
+? **Field coverage:** Â±1.83m covers full FTC field  
 
 ## File Structure
 
 ### `src/utils/poseEncoder.js` ?
 - **Purpose:** Componentized pose encoding/decoding
-- **Units:** Meters for X/Y, Degrees for ?
+- **Units:** Meters for X/Y, Degrees for Î¸
 - **Functions:**
   - `encodePose(x_m, y_m, theta)` ? 6-char base64 string
   - `decodePose(base64)` ? `{x, y, theta}` in meters/degrees
@@ -116,9 +116,9 @@ QR Code: S0qrG8AA
 ### `src/components/steps/Step4StartPosition.jsx`
 - Uses `pos.key` for identification
 - Custom position always uses `S0`
-- Shows X/Y/? input fields for S0 **in meters**
-- Input ranges: X/Y ±1.83m, ? ±180°
-- Step sizes: X/Y 0.001m, ? 0.088°
+- Shows X/Y/Î¸ input fields for S0 **in meters**
+- Input ranges: X/Y Â±1.83m, Î¸ Â±180Â°
+- Step sizes: X/Y 0.001m, Î¸ 0.088Â°
 - Displays resolution info and encoding details
 - Auto-rounds to encoding precision on blur
 
@@ -132,14 +132,14 @@ QR Code: S0qrG8AA
 - `-0.75` meters (negative positions)
 
 **Display:**
-- Shows position in meters: "Custom (0.500m, -0.300m, 90.00°)"
-- Resolution banner: "X/Y: 0.000893m (~0.89mm), ?: 0.088°"
-- Range hints: "±1.83m (±72")"
+- Shows position in meters: "Custom (0.500m, -0.300m, 90.00Â°)"
+- Resolution banner: "X/Y: 0.000893m (~0.89mm), Î¸: 0.088Â°"
+- Range hints: "Â±1.83m (Â±72")"
 
 **Adjustment feedback:**
 - "X rounded to 0.893mm resolution"
-- "Y clamped to ±1.83m range"
-- "Heading rounded to 0.088° resolution"
+- "Y clamped to Â±1.83m range"
+- "Heading rounded to 0.088Â° resolution"
 
 ## QR Code Format
 
@@ -158,7 +158,7 @@ QR Code: S0qrG8AA
 - `A2` - Action 2 (far_launch)
 
 ### Example: Custom Position
-**Match 3, Blue alliance, Start position S0 at (0.6m, -0.3m, 90°):**
+**Match 3, Blue alliance, Start position S0 at (0.6m, -0.3m, 90Â°):**
 ```
 3BS0qrG8AAA3W2A6
 ```
@@ -168,7 +168,7 @@ QR Code: S0qrG8AA
 - `B` - Blue alliance
 - `S0qrG8AA` - Custom position (8 bytes total)
   - `S0` - Custom position indicator
-  - `qrG8AA` - Base64 encoded pose (0.6m, -0.3m, 90°)
+  - `qrG8AA` - Base64 encoded pose (0.6m, -0.3m, 90Â°)
 - `A3` - Action 3 (spike_1)
 - `W2` - Wait 2 seconds
 - `A6` - Action 6 (near_park)
@@ -235,9 +235,9 @@ const valid = isValidPoseEncoding("qrG8AA");
 ## Testing
 
 ### Test Cases
-- ? Encode/decode identity: `decodePose(encodePose(x, y, ?))` ? `(x, y, ?)`
-- ? Resolution: Values round to 0.893mm for X/Y, 0.088° for ?
-- ? Range limits: ±1.8288m for X/Y, ±180° for ?
+- ? Encode/decode identity: `decodePose(encodePose(x, y, Î¸))` ? `(x, y, Î¸)`
+- ? Resolution: Values round to 0.893mm for X/Y, 0.088Â° for Î¸
+- ? Range limits: Â±1.8288m for X/Y, Â±180Â° for Î¸
 - ? Clean decimals: 0.5m, 1.0m, 1.5m encode/decode perfectly
 - ? Base64 format: Always produces exactly 6 characters
 - ? QR integration: S0 + 6 chars = 8 bytes total
@@ -255,9 +255,9 @@ const valid = isValidPoseEncoding("qrG8AA");
 ---
 
 **Status:** ? Complete  
-**Format:** `S{n}` where n is auto-generated integer (no zero-padding)  
-**Custom Position:** Always `S0` with 6-char base64 pose  
-**Units:** Meters for X/Y coordinates, Degrees for heading  
-**Resolution:** 0.893mm (0.0351") for position, 0.088° for heading  
-**Encoding:** 12-12-12 bits, perfect 36-bit packing  
+**Format:** `S{n}` where n is auto-generated integer (no zero-padding)
+**Custom Position:** Always `S0` with 6-char base64 pose
+**Units:** Meters for X/Y coordinates, Degrees for Î¸
+**Resolution:** 0.893mm (0.0351") for position, 0.088Â° for Î¸
+**Encoding:** 12-12-12 bits, perfect 36-bit packing
 **Total Size:** 8 bytes for custom position (S0 + 6 base64 chars)
