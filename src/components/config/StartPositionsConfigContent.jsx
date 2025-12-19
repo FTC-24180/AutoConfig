@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { AddItemForm } from '../common/AddItemForm';
+import { useRef, useMemo } from 'react';
+import { InlineAddForm } from '../common/InlineAddForm';
 
 export function StartPositionsConfigContent({
   startPositions,
@@ -8,7 +8,10 @@ export function StartPositionsConfigContent({
   onDeleteStartPosition,
   onExportConfig,
   error,
-  clearError
+  clearError,
+  showAddForm,
+  setShowAddForm,
+  getNextStartKey
 }) {
   // Track previous valid labels for each position
   const previousLabelsRef = useRef({});
@@ -18,6 +21,11 @@ export function StartPositionsConfigContent({
     { key: 'S0', label: 'Custom', isSystem: true },
     ...startPositions
   ];
+
+  // Get existing labels for duplicate checking (exclude system S0)
+  const existingLabels = useMemo(() => {
+    return startPositions.map(pos => pos.label);
+  }, [startPositions]);
 
   const handleLabelFocus = (actualIdx, currentLabel) => {
     // Store the current valid label when user starts editing
@@ -33,6 +41,20 @@ export function StartPositionsConfigContent({
       }
       clearError();
     }
+  };
+
+  const handleAddPosition = (label) => {
+    onAddStartPosition(label);
+    setShowAddForm(false);
+  };
+
+  const handleCancelAdd = () => {
+    setShowAddForm(false);
+  };
+
+  const getDefaultPositionLabel = (key) => {
+    const num = parseInt(key.substring(1));
+    return `Start Position ${num}`;
   };
 
   return (
@@ -118,14 +140,27 @@ export function StartPositionsConfigContent({
         })}
 
         <button
-          onClick={() => onAddStartPosition()}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-sm font-semibold transition min-h-[40px] touch-manipulation"
+          onClick={() => setShowAddForm(true)}
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-sm font-semibold transition min-h-[40px] touch-manipulation"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Add Position
         </button>
+
+        {showAddForm && (
+          <InlineAddForm
+            showForm={showAddForm}
+            onAdd={handleAddPosition}
+            onCancel={handleCancelAdd}
+            nextKey={getNextStartKey()}
+            getDefaultLabel={getDefaultPositionLabel}
+            existingLabels={existingLabels}
+            itemType="Start Position"
+            panelClassName="add-position-form-panel"
+          />
+        )}
       </div>
 
       <div className="p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">

@@ -33,28 +33,33 @@ export function ConfigurationMenu({
   clearPositionsError,
   // Form state
   showAddActionForm,
-  setShowAddActionForm
+  setShowAddActionForm,
+  showAddPositionForm,
+  setShowAddPositionForm,
+  getNextStartKey
 }) {
   const contentRef = useRef(null);
 
-  // Click outside handler for add form
+  // Click outside handler for add forms
   useEffect(() => {
-    if (!showAddActionForm) return;
+    if (!showAddActionForm && !showAddPositionForm) return;
 
     const handleClickOutside = (e) => {
       // Check if click is outside the add form but inside the menu
       if (contentRef.current && contentRef.current.contains(e.target)) {
-        // Check if the click target is not part of the add form
-        const isInsideAddForm = e.target.closest('.add-action-form-panel');
+        // Check if the click target is not part of any add form
+        const isInsideAddForm = e.target.closest('.add-action-form-panel') || 
+                                 e.target.closest('.add-position-form-panel');
         if (!isInsideAddForm) {
-          setShowAddActionForm(false);
+          if (showAddActionForm) setShowAddActionForm(false);
+          if (showAddPositionForm) setShowAddPositionForm(false);
         }
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showAddActionForm, setShowAddActionForm]);
+  }, [showAddActionForm, showAddPositionForm, setShowAddActionForm, setShowAddPositionForm]);
 
   // If showing actions config
   if (showActionsConfig) {
@@ -78,15 +83,20 @@ export function ConfigurationMenu({
   // If showing positions config
   if (showPositionsConfig) {
     return (
-      <StartPositionsConfigContent
-        startPositions={startPositions}
-        onAddStartPosition={onAddStartPosition}
-        onUpdateStartPosition={onUpdateStartPosition}
-        onDeleteStartPosition={onDeleteStartPosition}
-        onExportConfig={onExportConfig}
-        error={positionsError}
-        clearError={clearPositionsError}
-      />
+      <div ref={contentRef}>
+        <StartPositionsConfigContent
+          startPositions={startPositions}
+          onAddStartPosition={onAddStartPosition}
+          onUpdateStartPosition={onUpdateStartPosition}
+          onDeleteStartPosition={onDeleteStartPosition}
+          onExportConfig={onExportConfig}
+          error={positionsError}
+          clearError={clearPositionsError}
+          showAddForm={showAddPositionForm}
+          setShowAddForm={setShowAddPositionForm}
+          getNextStartKey={getNextStartKey}
+        />
+      </div>
     );
   }
 

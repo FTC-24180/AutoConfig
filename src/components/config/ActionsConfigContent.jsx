@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { InlineAddForm } from '../common/InlineAddForm';
 
 export function ActionsConfigContent({
   actionGroups,
@@ -14,8 +15,6 @@ export function ActionsConfigContent({
   const [isInfoExpanded, setIsInfoExpanded] = useState(true);
   const [isActionsExpanded, setIsActionsExpanded] = useState(true);
   const [isWaitExpanded, setIsWaitExpanded] = useState(false);
-  const [newActionLabel, setNewActionLabel] = useState('');
-  const [addFormError, setAddFormError] = useState(null);
   
   // Track previous valid labels for each action
   const previousLabelsRef = useRef({});
@@ -42,43 +41,6 @@ export function ActionsConfigContent({
     return actionGroups.actions?.actions.map(action => action.label) || [];
   }, [actionGroups.actions?.actions]);
 
-  // Auto-focus and select text when add form opens
-  useEffect(() => {
-    if (showAddForm && addInputRef.current) {
-      const nextKey = getNextActionKey();
-      const defaultLabel = `Action ${nextKey}`;
-      setNewActionLabel(defaultLabel);
-      setAddFormError(null);
-      
-      setTimeout(() => {
-        addInputRef.current?.focus();
-        addInputRef.current?.select();
-      }, 100);
-    }
-  }, [showAddForm, getNextActionKey]);
-
-  // Validate label in real-time
-  useEffect(() => {
-    if (!showAddForm) return;
-    
-    const trimmedLabel = newActionLabel.trim();
-    
-    if (!trimmedLabel) {
-      setAddFormError('Label cannot be empty');
-      return;
-    }
-
-    const isDuplicate = existingLabels.some(
-      existingLabel => existingLabel.trim().toLowerCase() === trimmedLabel.toLowerCase()
-    );
-
-    if (isDuplicate) {
-      setAddFormError(`An action with the label "${trimmedLabel}" already exists. Please use a unique label.`);
-    } else {
-      setAddFormError(null);
-    }
-  }, [newActionLabel, existingLabels, showAddForm]);
-
   const handleLabelFocus = (originalIndex, currentLabel) => {
     // Store the current valid label when user starts editing
     previousLabelsRef.current[originalIndex] = currentLabel;
@@ -95,30 +57,16 @@ export function ActionsConfigContent({
     }
   };
   
-  const handleAddAction = () => {
-    if (addFormError || !newActionLabel.trim()) {
-      return;
-    }
-
-    onAddActionToGroup('actions', { label: newActionLabel.trim() });
+  const handleAddAction = (label) => {
+    onAddActionToGroup('actions', { label });
     setShowAddForm(false);
-    setNewActionLabel('');
-    setAddFormError(null);
   };
 
   const handleCancelAdd = () => {
     setShowAddForm(false);
-    setNewActionLabel('');
-    setAddFormError(null);
   };
 
-  const handleAddFormKeyDown = (e) => {
-    if (e.key === 'Enter' && !addFormError && newActionLabel.trim()) {
-      handleAddAction();
-    } else if (e.key === 'Escape') {
-      handleCancelAdd();
-    }
-  };
+  const getDefaultActionLabel = (key) => `Action ${key}`;
 
   return (
     <div className="space-y-4">
@@ -346,59 +294,16 @@ export function ActionsConfigContent({
                   Add New Action
                 </button>
               ) : (
-                <div className="add-action-form-panel bg-indigo-50 dark:bg-indigo-950/30 border-2 border-indigo-300 dark:border-indigo-700 rounded-lg p-4">
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <label htmlFor="new-action-label" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        New Action Label
-                      </label>
-                      <span className="text-xs font-mono font-semibold text-indigo-600 dark:text-indigo-400">
-                        {getNextActionKey()}
-                      </span>
-                    </div>
-                    <input
-                      ref={addInputRef}
-                      id="new-action-label"
-                      type="text"
-                      value={newActionLabel}
-                      onChange={(e) => setNewActionLabel(e.target.value)}
-                      onKeyDown={handleAddFormKeyDown}
-                      className={`w-full px-3 py-2 border ${
-                        addFormError ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-slate-600'
-                      } dark:bg-slate-900 dark:text-gray-100 rounded-lg text-sm focus:ring-2 ${
-                        addFormError ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-indigo-500 focus:border-indigo-500'
-                      }`}
-                      placeholder="Enter action label"
-                    />
-                    {addFormError && (
-                      <div className="flex items-start gap-1.5 mt-2 text-xs text-red-600 dark:text-red-400">
-                        <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>{addFormError}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleCancelAdd}
-                      className="flex-1 py-2 px-4 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 active:bg-gray-400 text-gray-700 dark:text-gray-100 rounded-lg font-semibold transition min-h-[44px] touch-manipulation"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAddAction}
-                      disabled={!!addFormError || !newActionLabel.trim()}
-                      className={`flex-1 py-2 px-4 rounded-lg font-semibold transition min-h-[44px] touch-manipulation ${
-                        addFormError || !newActionLabel.trim()
-                          ? 'bg-gray-300 dark:bg-slate-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white'
-                      }`}
-                    >
-                      Add Action
-                    </button>
-                  </div>
-                </div>
+                <InlineAddForm
+                  showForm={showAddForm}
+                  onAdd={handleAddAction}
+                  onCancel={handleCancelAdd}
+                  nextKey={getNextActionKey()}
+                  getDefaultLabel={getDefaultActionLabel}
+                  existingLabels={existingLabels}
+                  itemType="Action"
+                  panelClassName="add-action-form-panel"
+                />
               )}
             </div>
           )}

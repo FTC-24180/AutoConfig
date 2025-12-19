@@ -43,6 +43,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   onAddStartPosition,
   onUpdateStartPosition,
   onDeleteStartPosition,
+  getNextStartKey,
   positionsError,
   clearPositionsError
 }, ref) {
@@ -63,6 +64,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   const [matchToDelete, setMatchToDelete] = useState(null);
   const [previewConfig, setPreviewConfig] = useState(null);
   const [showAddActionForm, setShowAddActionForm] = useState(false);
+  const [showAddPositionForm, setShowAddPositionForm] = useState(false);
   const [clearDataOptions, setClearDataOptions] = useState({
     matches: true,
     templates: false,
@@ -95,6 +97,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     setShowSettings(false);
     setShowHelp(false);
     setShowAddActionForm(false); // Close add form when menu closes
+    setShowAddPositionForm(false); // Close position add form when menu closes
   };
 
   const goBack = () => {
@@ -246,6 +249,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
           // Close add form if open, otherwise close entire menu
           if (showAddActionForm) {
             setShowAddActionForm(false);
+          } else if (showAddPositionForm) {
+            setShowAddPositionForm(false);
           } else {
             closeMenu();
           }
@@ -281,11 +286,13 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
             className="flex-1 overflow-y-auto p-4"
             onClick={(e) => {
               // Close add form when clicking on empty menu background
-              if (showAddActionForm) {
-                // Check if click is not inside the add form
-                const isInsideAddForm = e.target.closest('.add-action-form-panel');
+              if (showAddActionForm || showAddPositionForm) {
+                // Check if click is not inside any add form
+                const isInsideAddForm = e.target.closest('.add-action-form-panel') || 
+                                         e.target.closest('.add-position-form-panel');
                 if (!isInsideAddForm) {
-                  setShowAddActionForm(false);
+                  if (showAddActionForm) setShowAddActionForm(false);
+                  if (showAddPositionForm) setShowAddPositionForm(false);
                 }
               }
             }}
@@ -414,10 +421,14 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 onAddStartPosition={onAddStartPosition}
                 onUpdateStartPosition={onUpdateStartPosition}
                 onDeleteStartPosition={onDeleteStartPosition}
+                getNextStartKey={getNextStartKey}
                 positionsError={positionsError}
                 clearPositionsError={clearPositionsError}
                 showAddActionForm={showAddActionForm}
                 setShowAddActionForm={setShowAddActionForm}
+                showAddPositionForm={showAddPositionForm}
+                setShowAddPositionForm={setShowAddPositionForm}
+                getNextStartKey={getNextStartKey}
               />
             )}
 

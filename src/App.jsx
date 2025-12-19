@@ -160,6 +160,7 @@ function App() {
     onAddStartPosition: startPositionsHook.addStartPosition,
     onUpdateStartPosition: startPositionsHook.updateStartPosition,
     onDeleteStartPosition: startPositionsHook.deleteStartPosition,
+    getNextStartKey: startPositionsHook.getNextKey,
     positionsError: startPositionsHook.error,
     clearPositionsError: startPositionsHook.clearError
   };

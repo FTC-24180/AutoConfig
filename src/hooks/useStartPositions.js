@@ -154,6 +154,7 @@ export function useStartPositions() {
     addStartPosition,
     updateStartPosition,
     deleteStartPosition,
+    getNextKey,
     error,
     clearError
   };
