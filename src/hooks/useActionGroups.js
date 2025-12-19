@@ -7,17 +7,24 @@ const DEFAULT_ACTION_GROUPS = {
     label: 'Actions',
     icon: '\u26A1',
     actions: [
-      { id: 'A1', label: 'Near Launch' },
-      { id: 'A2', label: 'Far Launch' },
-      { id: 'A3', label: 'Spike 1' },
-      { id: 'A4', label: 'Spike 2' },
-      { id: 'A5', label: 'Spike 3' },
-      { id: 'A6', label: 'Park (Near)' },
-      { id: 'A7', label: 'Park (Far)' },
-      { id: 'A8', label: 'Dump' },
-      { id: 'A9', label: 'Corner' },
-      { id: 'A10', label: 'Drive To' }
+
     ]
+  },
+  wait: {
+    label: 'Wait',
+    icon: '\u23F1\uFE0F',
+    actions: [
+      { id: 'W', label: 'Wait', config: { waitTime: 1000 } }
+    ]
+  }
+};
+
+// Empty action groups structure for cleared state
+const EMPTY_ACTION_GROUPS = {
+  actions: {
+    label: 'Actions',
+    icon: '\u26A1',
+    actions: []
   },
   wait: {
     label: 'Wait',
@@ -35,14 +42,26 @@ const DEFAULT_ACTION_GROUPS = {
 export function useActionGroups() {
   const [actionGroups, setActionGroups] = useState(() => {
     const stored = getStorageItem(STORAGE_KEYS.ACTION_GROUPS, null);
+    const initialized = getStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, null);
     
-    // If no stored data or not initialized, use defaults
-    if (!stored || !getStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, false)) {
+    // If storage has never been initialized (null), use defaults for first time
+    if (stored === null && initialized === null) {
       setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
       return DEFAULT_ACTION_GROUPS;
     }
     
-    return stored;
+    // If initialized flag is 'cleared', return empty structure
+    if (initialized === 'cleared') {
+      return EMPTY_ACTION_GROUPS;
+    }
+    
+    // If we have stored data, use it
+    if (stored && typeof stored === 'object') {
+      return stored;
+    }
+    
+    // Fallback to defaults
+    return DEFAULT_ACTION_GROUPS;
   });
 
   useEffect(() => {

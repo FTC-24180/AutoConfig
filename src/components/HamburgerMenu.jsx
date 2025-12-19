@@ -135,8 +135,21 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       }
       
       if (clearDataOptions.actionGroups) {
-        removeStorageItem(STORAGE_KEYS.ACTION_GROUPS);
-        removeStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED);
+        setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'cleared');
+        setStorageItem(STORAGE_KEYS.ACTION_GROUPS, {
+          actions: {
+            label: 'Actions',
+            icon: '\u26A1',
+            actions: []
+          },
+          wait: {
+            label: 'Wait',
+            icon: '\u23F1\uFE0F',
+            actions: [
+              { id: 'W', label: 'Wait', config: { waitTime: 1000 } }
+            ]
+          }
+        });
       }
       
       if (clearDataOptions.startPositions) {
