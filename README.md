@@ -497,7 +497,7 @@ For different environments, create `.env` files:
 ```bash
 # .env.production
 VITE_API_URL=https://api.example.com
-VITE_APP_TITLE=FTC AutoConfig
+VITE_APP_TITLE=FTC Autofig
 ```
 
 Access in code:

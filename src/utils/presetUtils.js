@@ -5,7 +5,7 @@ export function loadConfigPreset(preset, actionGroupsHook, startPositionsHook) {
   if (config.actionGroups) {
     // Store action groups to localStorage
     try {
-      localStorage.setItem('ftc-autoconfig-action-groups', JSON.stringify(config.actionGroups));
+      localStorage.setItem('ftc-autofig-action-groups', JSON.stringify(config.actionGroups));
       // Trigger a reload to apply the new configuration
       window.location.reload();
     } catch (e) {
@@ -17,7 +17,7 @@ export function loadConfigPreset(preset, actionGroupsHook, startPositionsHook) {
   if (config.startPositions) {
     // Store start positions to localStorage
     try {
-      localStorage.setItem('ftc-autoconfig-start-positions', JSON.stringify(config.startPositions));
+      localStorage.setItem('ftc-autofig-start-positions', JSON.stringify(config.startPositions));
       // If we didn't already trigger a reload for action groups, reload now
       if (!config.actionGroups) {
         window.location.reload();

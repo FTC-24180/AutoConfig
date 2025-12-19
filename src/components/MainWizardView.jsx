@@ -45,7 +45,7 @@ export function MainWizardView({
         <div className="flex items-center justify-center px-3 py-2.5">
           <div className="text-center">
             <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight">
-              FTC AutoConfig
+              FTC Autofig
             </h1>
             <p className="text-xs text-indigo-600 dark:text-indigo-300 leading-none flex items-center justify-center gap-1">
                           Match #{currentMatch?.matchNumber || '?'} {'\u2022'}{' '}

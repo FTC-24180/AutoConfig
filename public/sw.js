@@ -1,7 +1,7 @@
 // Version injected at build time from public/version.js
 const VERSION = '__APP_VERSION__';
-const CACHE_NAME = `ftc-autoconfig-v${VERSION}`;
-const RUNTIME_CACHE = `ftc-autoconfig-runtime-v${VERSION}`;
+const CACHE_NAME = `ftc-autofig-v${VERSION}`;
+const RUNTIME_CACHE = `ftc-autofig-runtime-v${VERSION}`;
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -156,10 +156,10 @@ self.addEventListener('push', (event) => {
     icon: '/icon-512.svg',
     badge: '/icon-512.svg',
     vibrate: [200, 100, 200],
-    tag: 'ftc-autoconfig-update'
+    tag: 'ftc-autofig-update'
   };
 
   event.waitUntil(
-    self.registration.showNotification('FTC AutoConfig', options)
+    self.registration.showNotification('FTC Autofig', options)
   );
 });
