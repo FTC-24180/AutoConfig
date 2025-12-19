@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { WizardStep } from '../WizardStep';
 import { StartPositionPickerPanel } from '../StartPositionPickerPanel';
-import { getPoseResolution, roundToResolution } from '../../utils/poseEncoder';
+import { getPoseResolution, roundToResolution, metersToInches, inchesToMeters } from '../../utils/poseEncoder';
 
 export function Step4StartPosition({ 
   startPosition, 
@@ -13,6 +13,12 @@ export function Step4StartPosition({
 }) {
   const [adjustmentMessage, setAdjustmentMessage] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [useInches, setUseInches] = useState(true); // Default to inches
+  
+  // Local editing state - only used during active editing
+  // This keeps display values separate from stored meters
+  const [editingValues, setEditingValues] = useState({});
+  
   const resolution = getPoseResolution();
 
   const closePanel = () => setIsPanelOpen(false);
@@ -23,24 +29,70 @@ export function Step4StartPosition({
     const pos = startPositions.find(p => p.key === startPosition.type);
     if (pos) return pos.label;
     
-    // Handle custom position (S0) - display to whole mm (3 decimal places)
+    // Handle custom position (S0) - display to 0.01 inches or 1mm
     if (startPosition.type === 'S0') {
-      const x = startPosition.x ?? 0;
-      const y = startPosition.y ?? 0;
-      const theta = startPosition.theta ?? 0;
-      return `Custom (${x.toFixed(3)}m, ${y.toFixed(3)}m, ${theta.toFixed(1)}\u00B0)`;
+      // Ensure values are numbers (handle edge cases during editing)
+      const xMeters = Number(startPosition.x) || 0;
+      const yMeters = Number(startPosition.y) || 0;
+      const theta = Number(startPosition.theta) || 0;
+      
+      if (useInches) {
+        const xIn = metersToInches(xMeters);
+        const yIn = metersToInches(yMeters);
+        return `Custom (${xIn.toFixed(2)}in, ${yIn.toFixed(2)}in, ${theta.toFixed(1)}\u00B0)`;
+      } else {
+        return `Custom (${xMeters.toFixed(3)}m, ${yMeters.toFixed(3)}m, ${theta.toFixed(1)}\u00B0)`;
+      }
     }
     
     return 'Unknown';
   };
 
-  const handleFieldBlur = (field, rawValue) => {
-    const value = parseFloat(rawValue);
+  const handleFieldFocus = (field) => {
+    // When focusing, convert stored meters to editing unit and store in local state
+    const storedValue = startPosition[field];
+    
+    // storedValue is a number in meters
+    const numValue = storedValue || 0;
+    
+    let displayValue;
+    if (useInches && (field === 'x' || field === 'y')) {
+      // Convert meters to inches for editing
+      const inchesValue = metersToInches(numValue);
+      displayValue = inchesValue.toFixed(2);
+    } else if (field === 'x' || field === 'y') {
+      // Meters mode
+      displayValue = numValue.toFixed(3);
+    } else if (field === 'theta') {
+      // Theta in degrees
+      displayValue = numValue.toFixed(1);
+    } else {
+      displayValue = String(numValue);
+    }
+    
+    // Store in local editing state
+    setEditingValues(prev => ({ ...prev, [field]: displayValue }));
+  };
+
+  const handleFieldBlur = (field, displayValue) => {
+    // Clear local editing state
+    setEditingValues(prev => {
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+
+    let value = parseFloat(displayValue);
     
     // If empty or invalid, set to 0
     if (isNaN(value)) {
-      onUpdateField(field, '0');
+      onUpdateField(field, 0);
       return;
+    }
+
+    // Convert inches to meters if needed (ALWAYS store as meters internally)
+    if (useInches && (field === 'x' || field === 'y')) {
+      value = inchesToMeters(value);
     }
 
     let adjusted = value;
@@ -48,20 +100,22 @@ export function Step4StartPosition({
     let reason = '';
 
     if (field === 'x' || field === 'y') {
-      // Round to 0.893mm resolution and clamp to ±1.8288m
+      // Round to 0.893mm resolution and clamp to ±1.8288m (±72 inches)
       const clamped = Math.max(-1.8288, Math.min(1.8288, value));
       adjusted = roundToResolution(clamped, 3.6576, 1.8288);
       
       if (Math.abs(value - clamped) > 0.0001) {
         wasAdjusted = true;
-        reason = `${field.toUpperCase()} clamped to \u00B11.83m range`;
+        reason = useInches ? `${field.toUpperCase()} clamped to \u00B172" range` 
+                            : `${field.toUpperCase()} clamped to \u00B11.83m range`;
       } else if (Math.abs(value - adjusted) > 0.0001) {
         wasAdjusted = true;
-        reason = `${field.toUpperCase()} rounded to ~1mm resolution`;
+        reason = useInches ? `${field.toUpperCase()} rounded to ~0.035" resolution`
+                            : `${field.toUpperCase()} rounded to ~0.9mm resolution`;
       }
       
-      // Format to 3 decimal places (whole mm) for display
-      adjusted = parseFloat(adjusted.toFixed(3));
+      // Round for storage precision
+      adjusted = parseFloat(adjusted.toFixed(6));
     } else if (field === 'theta') {
       // Round to 0.088° resolution and clamp to ±180°
       const clamped = Math.max(-180, Math.min(180, value));
@@ -72,21 +126,60 @@ export function Step4StartPosition({
         reason = 'Heading clamped to \u00B1180\u00B0 range';
       } else if (Math.abs(value - adjusted) > 0.001) {
         wasAdjusted = true;
-        reason = 'Heading rounded to ~0.1\u00B0 resolution';
+        reason = 'Heading rounded to ~0.09\u00B0 resolution';
       }
       
-      // Format to 1 decimal place for display
       adjusted = parseFloat(adjusted.toFixed(1));
     }
 
-    // Update the field with adjusted value
-    onUpdateField(field, adjusted.toString());
+    // Update the field with adjusted value as NUMBER (not string)
+    onUpdateField(field, adjusted);
 
     // Show feedback if adjusted
     if (wasAdjusted) {
       setAdjustmentMessage(reason);
       setTimeout(() => setAdjustmentMessage(''), 3000);
     }
+  };
+
+  const handleFieldChange = (field, rawValue) => {
+    // Allow empty string, negative sign, and valid decimal number patterns
+    if (rawValue === '' || rawValue === '-' || /^-?\d*\.?\d*$/.test(rawValue)) {
+      // Update local editing state only
+      setEditingValues(prev => ({ ...prev, [field]: rawValue }));
+    }
+  };
+
+  // Get display value - use local editing state if available, otherwise convert from storage
+  const getDisplayValue = (field) => {
+    // If currently editing this field, use local editing state
+    if (editingValues.hasOwnProperty(field)) {
+      return editingValues[field];
+    }
+    
+    // Convert from stored value (should be number in meters)
+    const storedValue = startPosition[field];
+    
+    // Handle undefined/null/empty and convert to number
+    const numValue = Number(storedValue);
+    if (!storedValue || isNaN(numValue)) return '0';
+    
+    // Convert from meters to display unit with appropriate rounding
+    if (useInches && (field === 'x' || field === 'y')) {
+      const inches = metersToInches(numValue);
+      return inches.toFixed(2);
+    }
+    
+    if (field === 'theta') {
+      return numValue.toFixed(1);
+    }
+    
+    // For meters mode x/y
+    if (field === 'x' || field === 'y') {
+      return numValue.toFixed(3);
+    }
+    
+    return String(numValue);
   };
 
   // Only render panel when active
@@ -140,59 +233,72 @@ export function Step4StartPosition({
         {startPosition.type === 'S0' && (
           <>
             <div className="bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Custom Position Configuration</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-100">Custom Position Configuration</h4>
+                
+                {/* Unit Toggle */}
+                <button
+                  onClick={() => setUseInches(!useInches)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  {useInches ? 'Inches' : 'Meters'}
+                </button>
+              </div>
               
               {/* Resolution info */}
               <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">
-                <strong>Resolution:</strong> X/Y: ~1mm, theta: ~0.1{'\u00B0'}
+                <strong>Resolution:</strong> X/Y: ~{useInches ? '0.035"' : '0.9mm'}, theta: ~0.09{'\u00B0'}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    X Position (meters)
+                    X Position ({useInches ? 'in' : 'm'})
                   </label>
                   <input
-                    type="number"
-                    value={startPosition.x ?? 0}
-                    onChange={(e) => onUpdateField('x', e.target.value)}
+                    type="text"
+                    inputMode="decimal"
+                    value={getDisplayValue('x')}
+                    onFocus={() => handleFieldFocus('x')}
+                    onChange={(e) => handleFieldChange('x', e.target.value)}
                     onBlur={(e) => handleFieldBlur('x', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    step="0.001"
-                    min="-1.8288"
-                    max="1.8288"
+                    placeholder="0"
                   />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{'\u00B1'}1.83m ({'\u00B1'}72")</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{useInches ? '\u00B172"' : '\u00B11.83m'}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Y Position (meters)
+                    Y Position ({useInches ? 'in' : 'm'})
                   </label>
                   <input
-                    type="number"
-                    value={startPosition.y ?? 0}
-                    onChange={(e) => onUpdateField('y', e.target.value)}
+                    type="text"
+                    inputMode="decimal"
+                    value={getDisplayValue('y')}
+                    onFocus={() => handleFieldFocus('y')}
+                    onChange={(e) => handleFieldChange('y', e.target.value)}
                     onBlur={(e) => handleFieldBlur('y', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    step="0.001"
-                    min="-1.8288"
-                    max="1.8288"
+                    placeholder="0"
                   />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{'\u00B1'}1.83m ({'\u00B1'}72")</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{useInches ? '\u00B172"' : '\u00B11.83m'}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Angle (theta{'\u00B0'})
+                    Angle (deg)
                   </label>
                   <input
-                    type="number"
-                    value={startPosition.theta ?? 0}
-                    onChange={(e) => onUpdateField('theta', e.target.value)}
+                    type="text"
+                    inputMode="decimal"
+                    value={getDisplayValue('theta')}
+                    onFocus={() => handleFieldFocus('theta')}
+                    onChange={(e) => handleFieldChange('theta', e.target.value)}
                     onBlur={(e) => handleFieldBlur('theta', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    step="0.1"
-                    min="-180"
-                    max="180"
+                    placeholder="0"
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{'\u00B1'}180{'\u00B0'}</p>
                 </div>
@@ -228,8 +334,16 @@ export function Step4StartPosition({
                   <span>12 bits per value</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Units:</span>
-                  <span>Meters & Degrees</span>
+                  <span>Display Units:</span>
+                  <span>{useInches ? 'Inches' : 'Meters'} & Degrees</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Internal Storage:</span>
+                  <span>Meters (always)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Resolution:</span>
+                  <span>{useInches ? '~0.035" (~1/28")' : '~0.9mm'}</span>
                 </div>
               </div>
             </div>

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
-// Default start positions with S{n} keys - only used for first-time initialization
-const DEFAULT_START_POSITIONS = [
-
-];
+// Default start positions - empty by default
+const DEFAULT_START_POSITIONS = [];
 
 export function useStartPositions() {
   const [startPositions, setStartPositions] = useState(() => {
@@ -18,25 +16,6 @@ export function useStartPositions() {
     // If storage exists but is empty array (after clear), keep it empty
     if (Array.isArray(stored) && stored.length === 0) {
       return [];
-    }
-    
-    // One-time migration: convert old format if needed
-    const needsMigration = stored.some(pos => !pos.key || pos.id);
-    if (needsMigration) {
-      const migrated = stored.map((pos, index) => {
-        // If already has key, keep it
-        if (pos.key) return pos;
-        
-        // Migrate from old id format
-        return {
-          key: `S${index + 1}`,
-          label: pos.label || pos.id || 'Position'
-        };
-      });
-      
-      // Save migrated data immediately
-      setStorageItem(STORAGE_KEYS.START_POSITIONS, migrated);
-      return migrated;
     }
     
     return stored;

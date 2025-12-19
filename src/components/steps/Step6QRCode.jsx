@@ -358,7 +358,7 @@ export function Step6QRCode({ config, onDownload, matches, currentMatchId, onSel
                 <strong>Start Position:</strong> {currentMatch.startPosition.type}
                 {isCustomPosition && currentMatch.startPosition.x !== undefined && (
                   <span className="ml-1">
-                    ({currentMatch.startPosition.x?.toFixed(2)}m, {currentMatch.startPosition.y?.toFixed(2)}m, {currentMatch.startPosition.theta?.toFixed(1)}{'\u00B0'})
+                                      ({Number(currentMatch.startPosition.x).toFixed(2)}m, {Number(currentMatch.startPosition.y).toFixed(2)}m, {Number(currentMatch.startPosition.theta).toFixed(1)}{'\u00B0'})
                   </span>
                 )}
               </div>

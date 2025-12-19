@@ -52,7 +52,11 @@ export function useWizardActions(matchesHook) {
   };
 
   const updateStartPositionField = (field, value) => {
-    const newStartPosition = { ...currentMatch.startPosition, [field]: parseFloat(value) || 0 };
+    // Parse to number for storage (match state should have numbers)
+    const numValue = parseFloat(value);
+    const finalValue = isNaN(numValue) ? 0 : numValue;
+    
+    const newStartPosition = { ...currentMatch.startPosition, [field]: finalValue };
     updateCurrentMatch({ startPosition: newStartPosition });
   };
 
