@@ -50,17 +50,23 @@ export function useActionGroups() {
       return DEFAULT_ACTION_GROUPS;
     }
     
-    // If initialized flag is 'cleared', return empty structure
+    // If initialized flag is 'cleared', return empty structure and reset flag
     if (initialized === 'cleared') {
+      setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
       return EMPTY_ACTION_GROUPS;
     }
     
     // If we have stored data, use it
     if (stored && typeof stored === 'object') {
+      // Make sure initialized flag is set
+      if (!initialized) {
+        setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
+      }
       return stored;
     }
     
     // Fallback to defaults
+    setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
     return DEFAULT_ACTION_GROUPS;
   });
 
