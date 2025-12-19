@@ -33,12 +33,9 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   onAngleUnitsChange = () => {},
   // Props for inline configuration
   actionGroups,
-  onRenameGroup,
-  onDeleteGroup,
   onAddActionToGroup,
   onUpdateActionInGroup,
   onDeleteActionInGroup,
-  onAddCustomGroup,
   getNextActionKey,
   actionsError,
   clearActionsError,

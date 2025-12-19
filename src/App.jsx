@@ -12,8 +12,6 @@ import { useMatchHandlers } from './hooks/useMatchHandlers';
 import { useTemplateModal } from './hooks/useTemplateModal';
 import { useServiceWorker } from './hooks/useServiceWorker';
 import { HamburgerMenu } from './components/HamburgerMenu';
-import { ManageActionsModal } from './components/ManageActionsModal';
-import { ManageStartPositionsModal } from './components/ManageStartPositionsModal';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { MainWizardView } from './components/MainWizardView';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
@@ -21,13 +19,11 @@ import { LoadTemplateModal } from './components/LoadTemplateModal';
 import { UpdateNotification } from './components/UpdateNotification';
 import { isValidReorder } from './utils/actionUtils';
 import { exportMatchesJSON, exportConfigJSON } from './utils/configUtils';
-import { loadPresetIntoMatches, loadConfigPreset } from './utils/presetUtils';
+import { loadConfigPreset } from './utils/presetUtils';
 import { getThemeForAlliance } from './utils/themeUtils';
 
 function App() {
   // Modal state
-  const [showManageActions, setShowManageActions] = useState(false);
-  const [showManageStartPositions, setShowManageStartPositions] = useState(false);
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
 
   // Ref for HamburgerMenu
@@ -154,12 +150,9 @@ function App() {
     useDegrees,
     onAngleUnitsChange: setUseDegrees,
     actionGroups: actionGroupsHook.actionGroups,
-    onRenameGroup: actionGroupsHook.renameGroup,
-    onDeleteGroup: actionGroupsHook.deleteGroup,
     onAddActionToGroup: actionGroupsHook.addActionToGroup,
     onUpdateActionInGroup: actionGroupsHook.updateActionInGroup,
     onDeleteActionInGroup: actionGroupsHook.deleteActionInGroup,
-    onAddCustomGroup: actionGroupsHook.addCustomGroup,
     getNextActionKey: actionGroupsHook.getNextActionKey,
     actionsError: actionGroupsHook.error,
     clearActionsError: actionGroupsHook.clearError,
