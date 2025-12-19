@@ -14,7 +14,8 @@ export function ClearDataModal({ isOpen, onClose, onConfirm, options, onOptionsC
     { key: 'actionGroups', label: 'Custom Actions', description: 'Custom action groups and types' },
     { key: 'startPositions', label: 'Start Positions', description: 'Custom start position presets' },
     { key: 'themePreference', label: 'Theme Preference', description: 'Light/Dark mode settings' },
-    { key: 'unitsPreference', label: 'Units Preference', description: 'Inches/Meters unit settings' }
+    { key: 'unitsPreference', label: 'DistanceUnits Preference', description: 'Inches/Meters unit settings' },
+    { key: 'angleUnitsPreference', label: 'Angle Units Preference', description: 'Degrees/Radians angle settings' }
   ];
 
   const selectedCount = Object.values(options).filter(Boolean).length;

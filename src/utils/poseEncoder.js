@@ -165,3 +165,21 @@ export function inchesToMeters(inches) {
 export function metersToInches(meters) {
   return meters * 39.3701;
 }
+
+/**
+ * Convert degrees to radians
+ * @param {number} degrees - Value in degrees
+ * @returns {number} Value in radians
+ */
+export function degreesToRadians(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+/**
+ * Convert radians to degrees
+ * @param {number} radians - Value in radians
+ * @returns {number} Value in degrees
+ */
+export function radiansToDegrees(radians) {
+  return radians * (180 / Math.PI);
+}

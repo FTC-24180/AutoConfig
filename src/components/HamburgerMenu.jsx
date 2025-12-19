@@ -29,6 +29,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   onThemeChange = () => {},
   useInches = true,
   onUnitsChange = () => {},
+  useDegrees = true,
+  onAngleUnitsChange = () => {},
   // Props for inline configuration
   actionGroups,
   onRenameGroup,
@@ -73,7 +75,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     actionGroups: true,
     startPositions: true,
     themePreference: true,
-    unitsPreference: true
+    unitsPreference: true,
+    angleUnitsPreference: true
   });
 
   // Expose methods to parent via ref
@@ -125,7 +128,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       actionGroups: true,
       startPositions: true,
       themePreference: true,
-      unitsPreference: true
+      unitsPreference: true,
+      angleUnitsPreference: true
     });
     setShowClearDataModal(true);
   };
@@ -176,6 +180,10 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       
       if (clearDataOptions.unitsPreference) {
         removeStorageItem(STORAGE_KEYS.UNITS_PREFERENCE);
+      }
+      
+      if (clearDataOptions.angleUnitsPreference) {
+        removeStorageItem(STORAGE_KEYS.ANGLE_UNITS_PREFERENCE);
       }
       
       setShowSuccessModal(true);
@@ -463,6 +471,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 onThemeChange={onThemeChange}
                 useInches={useInches}
                 onUnitsChange={onUnitsChange}
+                useDegrees={useDegrees}
+                onAngleUnitsChange={onAngleUnitsChange}
                 onClearAllData={handleClearAllData}
               />
             )}

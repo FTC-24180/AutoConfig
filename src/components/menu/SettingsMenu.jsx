@@ -34,6 +34,8 @@ export function SettingsMenu({
   onThemeChange,
   useInches,
   onUnitsChange,
+  useDegrees,
+  onAngleUnitsChange,
   onClearAllData
 }) {
   const resolvedThemeLabel = resolvedTheme.charAt(0).toUpperCase() + resolvedTheme.slice(1);
@@ -68,9 +70,9 @@ export function SettingsMenu({
         </p>
       </div>
 
-      {/* Units Preference */}
+      {/* Distance Units Preference */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Units</h3>
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Distance Units</h3>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => onUnitsChange(true)}
@@ -100,7 +102,43 @@ export function SettingsMenu({
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-          Measurement units for custom starting positions. Internal storage is always in meters.
+          Distance units. Internal storage is always in meters.
+        </p>
+      </div>
+
+      {/* Angle Units Preference */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Angle Units</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => onAngleUnitsChange(true)}
+            className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 min-h-[72px] ${
+              useDegrees
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
+            }`}
+          >
+            <svg className={`w-5 h-5 ${useDegrees ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Degrees
+          </button>
+          <button
+            onClick={() => onAngleUnitsChange(false)}
+            className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 min-h-[72px] ${
+              !useDegrees
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
+            }`}
+          >
+            <svg className={`w-5 h-5 ${!useDegrees ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Radians
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+          Angle units. Internal storage is always in degrees.
         </p>
       </div>
 

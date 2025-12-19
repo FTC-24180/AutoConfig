@@ -61,4 +61,5 @@ export const STORAGE_KEYS = {
   START_POSITIONS: 'ftc-autoconfig-start-positions',
   THEME_PREFERENCE: 'autoconfig-theme-preference',
   UNITS_PREFERENCE: 'autoconfig-units-preference',
+  ANGLE_UNITS_PREFERENCE: 'autoconfig-angle-units-preference',
 };

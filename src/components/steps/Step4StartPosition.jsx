@@ -1,8 +1,8 @@
-import { useState } from 'react';
+ï»¿import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { WizardStep } from '../WizardStep';
 import { StartPositionPickerPanel } from '../StartPositionPickerPanel';
-import { getPoseResolution, roundToResolution, metersToInches, inchesToMeters } from '../../utils/poseEncoder';
+import { getPoseResolution, roundToResolution, metersToInches, inchesToMeters, degreesToRadians, radiansToDegrees } from '../../utils/poseEncoder';
 
 export function Step4StartPosition({ 
   startPosition, 
@@ -10,6 +10,7 @@ export function Step4StartPosition({
   startPositions,
   onUpdateField,
   useInches = true,
+  useDegrees = true,
   isActive = false
 }) {
   const [adjustmentMessage, setAdjustmentMessage] = useState('');
@@ -34,25 +35,28 @@ export function Step4StartPosition({
       // Ensure values are numbers (handle edge cases during editing)
       const xMeters = Number(startPosition.x) || 0;
       const yMeters = Number(startPosition.y) || 0;
-      const theta = Number(startPosition.theta) || 0;
+      const thetaDegrees = Number(startPosition.theta) || 0;
       
-      if (useInches) {
-        const xIn = metersToInches(xMeters);
-        const yIn = metersToInches(yMeters);
-        return `Custom (${xIn.toFixed(2)}in, ${yIn.toFixed(2)}in, ${theta.toFixed(1)}\u00B0)`;
-      } else {
-        return `Custom (${xMeters.toFixed(3)}m, ${yMeters.toFixed(3)}m, ${theta.toFixed(1)}\u00B0)`;
-      }
+      // Format position display
+      const xDisplay = useInches ? `${metersToInches(xMeters).toFixed(2)}in` : `${xMeters.toFixed(3)}m`;
+      const yDisplay = useInches ? `${metersToInches(yMeters).toFixed(2)}in` : `${yMeters.toFixed(3)}m`;
+      
+      // Format angle display
+      const angleDisplay = useDegrees 
+        ? `${thetaDegrees.toFixed(1)}\u00B0`
+        : `${degreesToRadians(thetaDegrees).toFixed(3)}rad`;
+      
+      return `Custom (${xDisplay}, ${yDisplay}, ${angleDisplay})`;
     }
     
     return 'Unknown';
   };
 
   const handleFieldFocus = (field) => {
-    // When focusing, convert stored meters to editing unit and store in local state
+    // When focusing, convert stored meters/degrees to editing unit and store in local state
     const storedValue = startPosition[field];
     
-    // storedValue is a number in meters
+    // storedValue is a number (meters for x/y, degrees for theta)
     const numValue = storedValue || 0;
     
     let displayValue;
@@ -64,8 +68,13 @@ export function Step4StartPosition({
       // Meters mode
       displayValue = numValue.toFixed(3);
     } else if (field === 'theta') {
-      // Theta in degrees
-      displayValue = numValue.toFixed(1);
+      // Theta - convert degrees to radians if needed
+      if (useDegrees) {
+        displayValue = numValue.toFixed(1);
+      } else {
+        const radiansValue = degreesToRadians(numValue);
+        displayValue = radiansValue.toFixed(3);
+      }
     } else {
       displayValue = String(numValue);
     }
@@ -90,9 +99,12 @@ export function Step4StartPosition({
       return;
     }
 
-    // Convert inches to meters if needed (ALWAYS store as meters internally)
+    // Convert to internal storage units (meters for x/y, degrees for theta)
     if (useInches && (field === 'x' || field === 'y')) {
       value = inchesToMeters(value);
+    } else if (!useDegrees && field === 'theta') {
+      // Convert radians to degrees for internal storage
+      value = radiansToDegrees(value);
     }
 
     let adjusted = value;
@@ -100,7 +112,7 @@ export function Step4StartPosition({
     let reason = '';
 
     if (field === 'x' || field === 'y') {
-      // Round to 0.893mm resolution and clamp to ±1.8288m (±72 inches)
+      // Round to 0.893mm resolution and clamp to Â±1.8288m (Â±72 inches)
       const clamped = Math.max(-1.8288, Math.min(1.8288, value));
       adjusted = roundToResolution(clamped, 3.6576, 1.8288);
       
@@ -117,16 +129,16 @@ export function Step4StartPosition({
       // Round for storage precision
       adjusted = parseFloat(adjusted.toFixed(6));
     } else if (field === 'theta') {
-      // Round to 0.088° resolution and clamp to ±180°
+      // Round to 0.088Â° resolution and clamp to Â±180Â°
       const clamped = Math.max(-180, Math.min(180, value));
       adjusted = roundToResolution(clamped, 360, 180);
       
       if (Math.abs(value - clamped) > 0.001) {
         wasAdjusted = true;
-        reason = 'Heading clamped to \u00B1180\u00B0 range';
+        reason = useDegrees ? 'Heading clamped to \u00B1180\u00B0 range' : 'Heading clamped to \u00B1Ï€ rad range';
       } else if (Math.abs(value - adjusted) > 0.001) {
         wasAdjusted = true;
-        reason = 'Heading rounded to ~0.09\u00B0 resolution';
+        reason = useDegrees ? 'Heading rounded to ~0.09\u00B0 resolution' : 'Heading rounded to ~0.0015 rad resolution';
       }
       
       adjusted = parseFloat(adjusted.toFixed(1));
@@ -157,21 +169,26 @@ export function Step4StartPosition({
       return editingValues[field];
     }
     
-    // Convert from stored value (should be number in meters)
+    // Convert from stored value (meters for x/y, degrees for theta)
     const storedValue = startPosition[field];
     
     // Handle undefined/null/empty and convert to number
     const numValue = Number(storedValue);
     if (!storedValue || isNaN(numValue)) return '0';
     
-    // Convert from meters to display unit with appropriate rounding
+    // Convert from storage to display unit with appropriate rounding
     if (useInches && (field === 'x' || field === 'y')) {
       const inches = metersToInches(numValue);
       return inches.toFixed(2);
     }
     
     if (field === 'theta') {
-      return numValue.toFixed(1);
+      if (useDegrees) {
+        return numValue.toFixed(1);
+      } else {
+        const radians = degreesToRadians(numValue);
+        return radians.toFixed(3);
+      }
     }
     
     // For meters mode x/y
@@ -239,7 +256,7 @@ export function Step4StartPosition({
               <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <strong>Resolution:</strong> X/Y: ~{useInches ? '0.035"' : '0.9mm'}, theta: ~0.09{'\u00B0'}
+                    <strong>Resolution:</strong> X/Y: ~{useInches ? '0.035"' : '0.9mm'}, theta: ~{useDegrees ? '0.09Â°' : '0.0015 rad'}
                   </div>
                 </div>
               </div>
@@ -279,7 +296,7 @@ export function Step4StartPosition({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                    Angle (deg)
+                    Angle ({useDegrees ? 'deg' : 'rad'})
                   </label>
                   <input
                     type="text"
@@ -291,7 +308,7 @@ export function Step4StartPosition({
                     className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="0"
                   />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{'\u00B1'}180{'\u00B0'}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{useDegrees ? '\u00B1180\u00B0' : '\u00B1Ï€ rad'}</p>
                 </div>
               </div>
 
@@ -326,15 +343,19 @@ export function Step4StartPosition({
                 </div>
                 <div className="flex justify-between">
                   <span>Display Units:</span>
-                  <span>{useInches ? 'Inches' : 'Meters'} & Degrees</span>
+                  <span>{useInches ? 'Inches' : 'Meters'} & {useDegrees ? 'Degrees' : 'Radians'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Internal Storage:</span>
-                  <span>Meters (always)</span>
+                  <span>Meters & Degrees (always)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Resolution:</span>
+                  <span>Position Resolution:</span>
                   <span>{useInches ? '~0.035" (~1/28")' : '~0.9mm'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Angle Resolution:</span>
+                                  <span>{useDegrees ? '~0.09\u00B0' : '~0.0015 rad'}</span>
                 </div>
               </div>
             </div>

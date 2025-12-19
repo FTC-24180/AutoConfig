@@ -9,6 +9,8 @@ export function ConfirmClearDataModal({ isOpen, onClose, onConfirm, options }) {
   if (options?.actionGroups) selectedItems.push('Custom Actions');
   if (options?.startPositions) selectedItems.push('Start Positions');
   if (options?.themePreference) selectedItems.push('Theme Preference');
+  if (options?.unitsPreference) selectedItems.push('Distance Units Preference');
+  if (options?.angleUnitsPreference) selectedItems.push('Angle Units Preference');
 
   return (
     <BaseModal

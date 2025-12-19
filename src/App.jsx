@@ -6,6 +6,7 @@ import { useStartPositions } from './hooks/useStartPositions';
 import { useMatches } from './hooks/useMatches';
 import { useThemePreference } from './hooks/useThemePreference';
 import { useUnitsPreference } from './hooks/useUnitsPreference';
+import { useAngleUnitsPreference } from './hooks/useAngleUnitsPreference';
 import { useWizardActions } from './hooks/useWizardActions';
 import { useMatchHandlers } from './hooks/useMatchHandlers';
 import { useTemplateModal } from './hooks/useTemplateModal';
@@ -39,6 +40,7 @@ function App() {
   const matchesHook = useMatches();
   const { preference: themePreference, setPreference: setThemePreference, resolvedTheme } = useThemePreference();
   const { useInches, setUseInches } = useUnitsPreference();
+  const { useDegrees, setUseDegrees } = useAngleUnitsPreference();
   const { updateAvailable, updateApp, currentVersion } = useServiceWorker();
 
   const isDarkTheme = resolvedTheme === 'dark';
@@ -149,6 +151,8 @@ function App() {
     onThemeChange: setThemePreference,
     useInches,
     onUnitsChange: setUseInches,
+    useDegrees,
+    onAngleUnitsChange: setUseDegrees,
     actionGroups: actionGroupsHook.actionGroups,
     onRenameGroup: actionGroupsHook.renameGroup,
     onDeleteGroup: actionGroupsHook.deleteGroup,
@@ -228,6 +232,7 @@ function App() {
         updateStartPositionField={updateStartPositionField}
         startPositions={startPositionsHook.startPositions}
         useInches={useInches}
+        useDegrees={useDegrees}
         actionList={currentMatch?.actions || []}
         actionGroups={actionGroupsHook.actionGroups}
         expandedGroup={expandedGroup}

@@ -15,6 +15,7 @@ export function MainWizardView({
   updateStartPositionField,
   startPositions,
   useInches,
+  useDegrees,
   actionList,
   actionGroups,
   expandedGroup,
@@ -75,6 +76,7 @@ export function MainWizardView({
             startPositions={startPositions}
             onUpdateField={updateStartPositionField}
             useInches={useInches}
+            useDegrees={useDegrees}
             isActive={currentStep === 1}
           />
           <Step5Actions
