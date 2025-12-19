@@ -6,7 +6,6 @@ export function ActionPickerPanel({
   expandedGroup,
   setExpandedGroup,
   onAddAction,
-  PICKUP_IDS,
   isOpen,
   onClose
 }) {
@@ -57,7 +56,6 @@ export function ActionPickerPanel({
               expandedGroup={expandedGroup}
               setExpandedGroup={setExpandedGroup}
               onAddAction={handleAddAction}
-              PICKUP_IDS={PICKUP_IDS}
             />
           </div>
         </div>

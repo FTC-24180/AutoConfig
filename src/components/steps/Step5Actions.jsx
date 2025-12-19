@@ -4,8 +4,6 @@ import { WizardStep } from '../WizardStep';
 import { ActionSequence } from '../ActionSequence';
 import { ActionPickerPanel } from '../ActionPickerPanel';
 
-const PICKUP_IDS = ['spike_1', 'spike_2', 'spike_3', 'corner'];
-
 export function Step5Actions({ 
   actionList,
   actionGroups,
@@ -38,7 +36,6 @@ export function Step5Actions({
       expandedGroup={expandedGroup}
       setExpandedGroup={setExpandedGroup}
       onAddAction={onAddAction}
-      PICKUP_IDS={PICKUP_IDS}
       isOpen={isPanelOpen}
       onClose={closePanel}
     />,

@@ -1,42 +1,15 @@
 ﻿import { useState, useImperativeHandle, forwardRef } from 'react';
 import { VERSION } from '../../public/version.js';
-import { StartPositionsConfigContent } from './config/StartPositionsConfigContent';
+import { ConfigurationMenu } from './menu/ConfigurationMenu';
+import { MatchesMenu } from './menu/MatchesMenu';
+import { SettingsMenu } from './menu/SettingsMenu';
+import { TemplatesMenu } from './menu/TemplatesMenu';
 import { ClearDataModal } from './ClearDataModal';
 import { ConfirmClearDataModal } from './ConfirmClearDataModal';
 import { ClearDataSuccessModal } from './ClearDataSuccessModal';
 import { DeleteConfigurationModal } from './DeleteConfigurationModal';
 import { DeleteMatchModal } from './DeleteMatchModal';
 import { removeStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
-
-const THEME_OPTIONS = [
-  { 
-    id: 'system', 
-    label: 'System', 
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    )
-  },
-  { 
-    id: 'light', 
-    label: 'Light', 
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    )
-  },
-  { 
-    id: 'dark', 
-    label: 'Dark', 
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-      </svg>
-    )
-  },
-];
 
 export const HamburgerMenu = forwardRef(function HamburgerMenu({ 
   matches,
@@ -71,8 +44,9 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [showMatches, setShowMatches] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
+  const [showActionsConfig, setShowActionsConfig] = useState(false);
   const [showPositionsConfig, setShowPositionsConfig] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showClearDataModal, setShowClearDataModal] = useState(false);
@@ -85,7 +59,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   const [previewConfig, setPreviewConfig] = useState(null);
   const [clearDataOptions, setClearDataOptions] = useState({
     matches: true,
-    templates: false,  // Default to unchecked
+    templates: false,
     actionGroups: true,
     startPositions: true,
     themePreference: true
@@ -96,6 +70,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     openToTemplates: () => {
       setIsOpen(true);
       setShowConfig(false);
+      setShowActionsConfig(false);
       setShowPositionsConfig(false);
       setShowTemplates(true);
       setShowMatches(false);
@@ -108,14 +83,16 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     setIsOpen(false);
     setShowMatches(false);
     setShowConfig(false);
-    setShowTemplates(false);
+    setShowActionsConfig(false);
     setShowPositionsConfig(false);
+    setShowTemplates(false);
     setShowSettings(false);
     setShowHelp(false);
   };
 
   const goBack = () => {
-    if (showPositionsConfig || showTemplates) {
+    if (showActionsConfig || showPositionsConfig || showTemplates) {
+      setShowActionsConfig(false);
       setShowPositionsConfig(false);
       setShowTemplates(false);
       setShowConfig(true);
@@ -129,7 +106,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   };
 
   const handleClearAllData = () => {
-    // Reset options to defaults when opening modal
     setClearDataOptions({
       matches: true,
       templates: false,
@@ -149,7 +125,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     setShowConfirmClearModal(false);
     
     try {
-      // Clear selected data types based on checkboxes
       if (clearDataOptions.matches) {
         removeStorageItem(STORAGE_KEYS.MATCHES);
         removeStorageItem(STORAGE_KEYS.CURRENT_MATCH);
@@ -160,14 +135,11 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       }
       
       if (clearDataOptions.actionGroups) {
-        // Set to empty object instead of removing to prevent defaults from loading
-        setStorageItem(STORAGE_KEYS.ACTION_GROUPS, {});
-        // Keep the initialized flag so it knows actions were intentionally cleared
-        setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
+        removeStorageItem(STORAGE_KEYS.ACTION_GROUPS);
+        removeStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED);
       }
       
       if (clearDataOptions.startPositions) {
-        // Set to empty array instead of removing
         setStorageItem(STORAGE_KEYS.START_POSITIONS, []);
       }
       
@@ -175,13 +147,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
         removeStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
       }
       
-      // Show success modal
       setShowSuccessModal(true);
-      
-      // Reload the page after a short delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       alert('❌ Error clearing data: ' + error.message);
     }
@@ -200,11 +167,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     }
   };
 
-  const cancelDeleteConfiguration = () => {
-    setShowDeleteConfigModal(false);
-    setConfigToDelete(null);
-  };
-
   const handleDeleteMatch = (match) => {
     setMatchToDelete(match);
     setShowDeleteMatchModal(true);
@@ -218,17 +180,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     }
   };
 
-  const cancelDeleteMatch = () => {
-    setShowDeleteMatchModal(false);
-    setMatchToDelete(null);
-  };
-
   const handlePreviewClick = (preset) => {
     setPreviewConfig(preset);
-  };
-
-  const closePreview = () => {
-    setPreviewConfig(null);
   };
 
   const copyToClipboard = () => {
@@ -237,11 +190,23 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     }
   };
 
-  const resolvedThemeLabel = resolvedTheme.charAt(0).toUpperCase() + resolvedTheme.slice(1);
+  // Determine current view title
+  const getTitle = () => {
+    if (showMatches) return 'Matches';
+    if (showActionsConfig) return 'Actions';
+    if (showPositionsConfig) return 'Start Positions';
+    if (showConfig) return 'Configuration';
+    if (showTemplates) return 'Configurations';
+    if (showSettings) return 'Settings';
+    if (showHelp) return 'Help & Info';
+    return 'Menu';
+  };
+
+  const showBackButton = showMatches || showConfig || showActionsConfig || showPositionsConfig || showTemplates || showSettings || showHelp;
 
   return (
     <>
-      {/* Hamburger Button - Positioned within header safe area */}
+      {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed right-4 z-50 p-2.5 bg-white dark:bg-slate-900 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 dark:active:bg-slate-700 transition min-h-[44px] min-w-[44px] touch-manipulation"
@@ -257,10 +222,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
 
       {/* Overlay */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={closeMenu}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={closeMenu} />
       )}
 
       {/* Menu Panel */}
@@ -272,7 +234,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
         <div className="flex flex-col h-full pt-safe">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center gap-3 safe-top">
-            {(showMatches || showConfig || showTemplates || showPositionsConfig || showSettings || showHelp) && (
+            {showBackButton && (
               <button
                 onClick={goBack}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 active:bg-gray-200 rounded-lg touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -283,14 +245,14 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
               </button>
             )}
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex-1">
-              {showMatches ? 'Matches' : showPositionsConfig ? 'Start Positions' : showConfig ? 'Configuration' : showTemplates ? 'Configurations' : showSettings ? 'Settings' : showHelp ? 'Help & Info' : 'Menu'}
+              {getTitle()}
             </h2>
           </div>
 
-          {/* Menu Items */}
+          {/* Menu Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            {!showMatches && !showConfig && !showTemplates && !showPositionsConfig && !showSettings && !showHelp ? (
-              // Main Menu
+            {/* Main Menu */}
+            {!showMatches && !showConfig && !showActionsConfig && !showPositionsConfig && !showTemplates && !showSettings && !showHelp && (
               <div className="space-y-2">
                 {/* Matches Button */}
                 <div className="mb-4">
@@ -361,253 +323,86 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                   </button>
                 </div>
               </div>
-            ) : showMatches ? (
-              // Matches Submenu
-              <div className="space-y-4">
-                {/* Add Match Button */}
-                <button
-                  onClick={() => {
-                    onAddMatch();
-                    closeMenu();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 active:bg-green-700 text-white rounded-lg font-semibold min-h-[48px] touch-manipulation"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add New Match
-                </button>
+            )}
 
-                {/* Matches List */}
-                {matches && matches.length > 0 ? (
-                  <div className="space-y-2">
-                    {matches.map(match => (
-                      <div
-                        key={match.id}
-                        className={`rounded-lg p-3 transition-all cursor-pointer touch-manipulation ${
-                          currentMatchId === match.id
-                            ? 'bg-indigo-100 dark:bg-indigo-900/40 ring-2 ring-indigo-500'
-                            : 'bg-gray-50 dark:bg-slate-800 active:bg-gray-100'
-                        }`}
-                        onClick={() => {
-                          onSelectMatch(match.id);
-                          closeMenu();
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-base font-bold text-gray-800 dark:text-gray-100">
-                                Match #{match.matchNumber}
-                              </span>
-                              <span className={`px-2 py-0.5 text-xs font-semibold rounded ${
-                                match.alliance === 'red' 
-                                  ? 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-100' 
-                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-100'
-                              }`}>
-                                {match.alliance.toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-300">
-                              {match.partnerTeam ? `Partner: ${match.partnerTeam}` : 'No partner'}
-                              {' • '}
-                              {match.actions?.length || 0} action{match.actions?.length !== 1 ? 's' : ''}
-                            </div>
-                          </div>
-                          <div className="flex gap-1 ml-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDuplicateMatch(match.id);
-                              }}
-                              className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
-                              title="Duplicate"
-                            >
-                              <svg className="w-4 h-4 text-gray-600 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMatch(match);
-                              }}
-                              className="p-2 hover:bg-red-100 dark:hover:bg-red-500/20 active:bg-red-200 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
-                              title="Delete"
-                            >
-                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+            {/* Matches Submenu */}
+            {showMatches && (
+              <MatchesMenu
+                matches={matches}
+                currentMatchId={currentMatchId}
+                onSelectMatch={onSelectMatch}
+                onAddMatch={onAddMatch}
+                onDuplicateMatch={onDuplicateMatch}
+                onDeleteMatch={handleDeleteMatch}
+                onExportJSON={onExportJSON}
+                onClose={closeMenu}
+              />
+            )}
 
-                    {/* Export All Matches Button */}
-                    <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
-                      <button
-                        onClick={() => {
-                          onExportJSON();
-                          closeMenu();
-                        }}
-                        className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
-                      >
-                        <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        <span className="font-medium text-gray-800 dark:text-gray-100">Export All Matches</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                    <p className="text-gray-500 dark:text-gray-300 text-sm mb-4">No matches yet</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">Click "Add New Match" above to create your first match</p>
-                  </div>
-                )}
-              </div>
-            ) : showSettings ? (
-              // Settings Submenu
-              <div>
-                {/* Theme Selector */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Appearance</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {THEME_OPTIONS.map(option => (
-                      <button
-                        key={option.id}
-                        onClick={() => onThemeChange(option.id)}
-                        className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 min-h-[72px] ${
-                          themePreference === option.id
-                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-                            : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
-                        }`}
-                      >
-                        <span className={themePreference === option.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}>
-                          {option.icon}
-                        </span>
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    {themePreference === 'system'
-                      ? `Following OS preference (currently ${resolvedThemeLabel}).`
-                      : `Forced ${themePreference} mode.`}
-                  </p>
-                </div>
+            {/* Configuration Submenu */}
+            {(showConfig || showActionsConfig || showPositionsConfig) && (
+              <ConfigurationMenu
+                showActionsConfig={showActionsConfig}
+                showPositionsConfig={showPositionsConfig}
+                onShowActionsConfig={() => {
+                  setShowConfig(false);
+                  setShowActionsConfig(true);
+                  setShowPositionsConfig(false);
+                }}
+                onShowPositionsConfig={() => {
+                  setShowConfig(false);
+                  setShowActionsConfig(false);
+                  setShowPositionsConfig(true);
+                }}
+                presets={presets}
+                onSaveTemplate={onSaveTemplate}
+                onShowTemplates={() => {
+                  setShowConfig(false);
+                  setShowActionsConfig(false);
+                  setShowPositionsConfig(false);
+                  setShowTemplates(true);
+                }}
+                onExportConfig={onExportConfig}
+                onClose={closeMenu}
+                actionGroups={actionGroups}
+                onAddActionToGroup={onAddActionToGroup}
+                onUpdateActionInGroup={onUpdateActionInGroup}
+                onDeleteActionInGroup={onDeleteActionInGroup}
+                startPositions={startPositions}
+                onAddStartPosition={onAddStartPosition}
+                onUpdateStartPosition={onUpdateStartPosition}
+                onDeleteStartPosition={onDeleteStartPosition}
+              />
+            )}
 
-                {/* Clear All Data - Danger Zone */}
-                <div className="pt-4 border-t border-red-200 dark:border-red-500/30 mt-4">
-                  <h3 className="text-sm font-semibold text-red-600 uppercase tracking-wider mb-3">Danger Zone</h3>
-                  <button
-                    onClick={handleClearAllData}
-                    className="w-full flex items-center gap-3 p-3 text-left bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 active:bg-red-200 rounded-lg transition touch-manipulation min-h-[48px] border-2 border-red-300 dark:border-red-500/40"
-                  >
-                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div>
-                      <div className="font-medium text-red-800 dark:text-red-200">Clear All Data</div>
-                      <div className="text-xs text-red-600 dark:text-red-400">Delete everything and reset app</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            ) : showConfig ? (
-              // Configuration Submenu
-              <div className="space-y-2">
-                {/* Remove Configure Actions button - action groups are now locked */}
-                
-                <button
-                  onClick={() => {
-                    setShowConfig(false);
-                    setShowPositionsConfig(true);
-                  }}
-                  className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
-                >
-                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 0112-1.227M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <div className="font-medium text-gray-800 dark:text-gray-100">Start Positions</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Manage preset positions</div>
-                  </div>
-                </button>
+            {/* Templates Submenu */}
+            {showTemplates && (
+              <TemplatesMenu
+                presets={presets}
+                onLoadPreset={onLoadPreset}
+                onDeletePreset={handleDeleteConfiguration}
+                onPreviewPreset={handlePreviewClick}
+                onSaveTemplate={() => {
+                  setShowTemplates(false);
+                  onSaveTemplate();
+                }}
+                onClose={closeMenu}
+              />
+            )}
 
-                {/* Configurations Section */}
-                <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
-                  <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Stored Configurations</h4>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 italic">
-                    Store named snapshot of current configuration.
-                  </p>
-                  
-                  <button
-                    onClick={() => {
-                      onSaveTemplate();
-                    }}
-                    className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition touch-manipulation min-h-[48px]"
-                  >
-                    <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-                    </svg>
-                    <div>
-                      <div className="font-medium text-gray-800 dark:text-gray-100">Store</div>                    
-                    </div>
-                  </button>
+            {/* Settings Submenu */}
+            {showSettings && (
+              <SettingsMenu
+                themePreference={themePreference}
+                resolvedTheme={resolvedTheme}
+                onThemeChange={onThemeChange}
+                onClearAllData={handleClearAllData}
+              />
+            )}
 
-                  <button
-                    onClick={() => {
-                      setShowConfig(false);
-                      setShowTemplates(true);
-                    }}
-                    className="w-full flex items-center justify-between p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">Load</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {presets.length > 0 && (
-                        <span className="text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-full font-semibold">
-                          {presets.length}
-                        </span>
-                      )}
-                      <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      onExportConfig();
-                      closeMenu();
-                    }}
-                    className="w-full flex items-center gap-3 p-3 text-left bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 rounded-lg transition mt-2 touch-manipulation min-h-[48px]"
-                  >
-                    <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    <div>
-                      <div className="font-medium text-gray-800 dark:text-gray-100">Export</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Download configurations as JSON</div>
-                    </div>
-                  </button>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200 dark:border-slate-800 mt-4">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Configure start positions and manage stored configurations. Action groups are locked to Actions and Wait for terse format compatibility.</p>
-                </div>
-              </div>
-            ) : showHelp ? (
-              // Help & Info View
+            {/* Help Submenu - Keep existing Help content from original file */}
+            {showHelp && (
               <div className="space-y-6">
-                {/* Version Info - Moved to top */}
                 <div className="text-center pb-4 border-b border-gray-200 dark:border-slate-800">
                   <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">FTC AutoConfig</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -802,80 +597,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                   </div>
                 </div>
               </div>
-            ) : showPositionsConfig ? (
-              // Start Positions Configuration View
-              <StartPositionsConfigContent
-                startPositions={startPositions}
-                onAddStartPosition={onAddStartPosition}
-                onUpdateStartPosition={onUpdateStartPosition}
-                onDeleteStartPosition={onDeleteStartPosition}
-                onExportConfig={onExportConfig}
-              />
-            ) : showTemplates ? (
-              // Configurations Submenu
-              <div>
-                <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-3">Stored Configurations</h3>
-
-                {presets.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 dark:bg-slate-800 rounded-lg">
-                    <p className="text-gray-500 dark:text-gray-300 text-sm">No configurations saved yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {presets.map(preset => (
-                      <div key={preset.id} className="bg-gray-50 dark:bg-slate-800 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-gray-800 dark:text-gray-100 text-sm">{preset.name}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              onLoadPreset(preset);
-                              closeMenu();
-                            }}
-                            className="flex-1 py-2 px-3 bg-indigo-600 active:bg-indigo-700 text-white text-sm rounded-lg transition min-h-[40px] touch-manipulation"
-                          >
-                            Load
-                          </button>
-                          <button
-                            onClick={() => handlePreviewClick(preset)}
-                            className="py-2 px-3 bg-gray-600 active:bg-gray-700 text-white text-sm rounded-lg transition min-h-[40px] min-w-[40px] flex items-center justify-center touch-manipulation"
-                            title="Preview JSON"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 006 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteConfiguration(preset)}
-                            className="py-2 px-3 bg-red-600 active:bg-red-700 text-white text-sm rounded-lg transition min-h-[40px] touch-manipulation"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Create New Preset Button - Moved here for better accessibility */}
-                    <div className="pt-4">
-                      <button
-                        onClick={() => {
-                          setShowTemplates(false);
-                          onSaveTemplate();
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-green-600 active:bg-green-700 text-white rounded-lg font-semibold min-h-[48px] touch-manipulation"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Save New Configuration
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
@@ -903,14 +625,20 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       <DeleteConfigurationModal
         isOpen={showDeleteConfigModal}
         configurationName={configToDelete?.name || ''}
-        onClose={cancelDeleteConfiguration}
+        onClose={() => {
+          setShowDeleteConfigModal(false);
+          setConfigToDelete(null);
+        }}
         onConfirm={confirmDeleteConfiguration}
       />
 
       <DeleteMatchModal
         isOpen={showDeleteMatchModal}
         matchNumber={matchToDelete?.matchNumber || 0}
-        onClose={cancelDeleteMatch}
+        onClose={() => {
+          setShowDeleteMatchModal(false);
+          setMatchToDelete(null);
+        }}
         onConfirm={confirmDeleteMatch}
       />
 
@@ -934,7 +662,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                   </svg>
                 </button>
                 <button
-                  onClick={closePreview}
+                  onClick={() => setPreviewConfig(null)}
                   className="p-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:bg-gray-300 text-gray-700 dark:text-gray-200 rounded-lg transition min-h-[44px] min-w-[44px] touch-manipulation"
                   title="Close"
                 >
@@ -951,7 +679,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
             </div>
             <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-slate-800">
               <button
-                onClick={closePreview}
+                onClick={() => setPreviewConfig(null)}
                 className="w-full py-3 px-4 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 active:bg-gray-400 text-gray-700 dark:text-gray-100 rounded-lg font-semibold transition min-h-[48px] touch-manipulation"
               >
                 Close

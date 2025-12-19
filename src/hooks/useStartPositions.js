@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
 import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
-// Default start positions with S{n} keys
+// Default start positions with S{n} keys - only used for first-time initialization
 const DEFAULT_START_POSITIONS = [
-  { key: 'S1', label: 'Front' },
-  { key: 'S2', label: 'Back' },
-  { key: 'S3', label: 'Left' },
-  { key: 'S4', label: 'Right' }
+
 ];
 
 export function useStartPositions() {
   const [startPositions, setStartPositions] = useState(() => {
-    const stored = getStorageItem(STORAGE_KEYS.START_POSITIONS, []);
+    const stored = getStorageItem(STORAGE_KEYS.START_POSITIONS, null);
     
-    // If no stored data, use defaults
-    if (stored.length === 0) {
+    // If storage has never been initialized (null), use defaults for first time
+    if (stored === null) {
       return DEFAULT_START_POSITIONS;
+    }
+    
+    // If storage exists but is empty array (after clear), keep it empty
+    if (Array.isArray(stored) && stored.length === 0) {
+      return [];
     }
     
     // One-time migration: convert old format if needed
@@ -45,7 +47,7 @@ export function useStartPositions() {
   }, [startPositions]);
 
   /**
-   * Get the next available S{n} key
+   * Get the next available S{n} key using lowest available ordinal
    */
   const getNextKey = () => {
     const existingNumbers = startPositions
@@ -55,8 +57,18 @@ export function useStartPositions() {
       })
       .filter(n => n > 0);
     
-    const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
-    return `S${maxNumber + 1}`;
+    if (existingNumbers.length === 0) return 'S1';
+    
+    // Find lowest available number
+    existingNumbers.sort((a, b) => a - b);
+    for (let i = 1; i <= existingNumbers[existingNumbers.length - 1]; i++) {
+      if (!existingNumbers.includes(i)) {
+        return `S${i}`;
+      }
+    }
+    
+    // If no gaps, use next number after max
+    return `S${existingNumbers[existingNumbers.length - 1] + 1}`;
   };
 
   const addStartPosition = (label) => {

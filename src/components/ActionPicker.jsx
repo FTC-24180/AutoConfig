@@ -3,8 +3,7 @@ export function ActionPicker({
   actionList,
   expandedGroup,
   setExpandedGroup,
-  onAddAction,
-  PICKUP_IDS
+  onAddAction
 }) {
   return (
     <div className="space-y-3">
@@ -41,19 +40,11 @@ export function ActionPicker({
               {isExpanded && (
                 <div className="mt-2 space-y-2 pl-4">
                   {group.actions.map(action => {
-                    const disabledPickup = PICKUP_IDS.includes(action.id) && actionList.some(a => a.type === action.id);
-                    const disabled = disabledPickup;
                     return (
                       <button
                         key={action.id}
-                        onClick={() => {
-                          if (disabled) return;
-                          onAddAction(action);
-                        }}
-                        className={`w-full text-left p-3 min-h-[48px] touch-manipulation ${
-                          disabled ? 'bg-gray-50 dark:bg-slate-800 opacity-50 cursor-not-allowed' : 'bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50'
-                        } border border-gray-200 dark:border-slate-700 rounded-lg transition`}
-                        aria-disabled={disabled}
+                        onClick={() => onAddAction(action)}
+                        className="w-full text-left p-3 min-h-[48px] touch-manipulation bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 border border-gray-200 dark:border-slate-700 rounded-lg transition"
                       >
                         <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{action.label}</span>
                       </button>

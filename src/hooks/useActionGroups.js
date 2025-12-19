@@ -1,9 +1,8 @@
 ﻿import { useState, useEffect } from 'react';
 import { getStorageItem, setStorageItem, STORAGE_KEYS } from '../utils/storageUtils';
 
-// Fixed action groups - no customization allowed
-// Action keys follow {identifier}{ordinal} pattern: A1, A2, etc.
-const FIXED_ACTION_GROUPS = {
+// Default action groups with A{n} keys
+const DEFAULT_ACTION_GROUPS = {
   actions: {
     label: 'Actions',
     icon: '\u26A1',
@@ -30,30 +29,130 @@ const FIXED_ACTION_GROUPS = {
 };
 
 /**
- * useActionGroups - Simplified version with fixed groups
- * Only provides actions and wait groups
- * No add/delete/rename functionality
+ * useActionGroups - Manages action groups with sparse A{n} keys
+ * Actions group uses A{n} format, Wait group uses fixed W key
  */
 export function useActionGroups() {
-  // Always return fixed groups, ignore any stored customizations
-  const [actionGroups] = useState(FIXED_ACTION_GROUPS);
+  const [actionGroups, setActionGroups] = useState(() => {
+    const stored = getStorageItem(STORAGE_KEYS.ACTION_GROUPS, null);
+    
+    // If no stored data or not initialized, use defaults
+    if (!stored || !getStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, false)) {
+      setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
+      return DEFAULT_ACTION_GROUPS;
+    }
+    
+    return stored;
+  });
 
-  // Clear any old custom groups from storage on mount
   useEffect(() => {
-    setStorageItem(STORAGE_KEYS.ACTION_GROUPS, FIXED_ACTION_GROUPS);
-    setStorageItem(STORAGE_KEYS.ACTIONS_INITIALIZED, 'true');
-  }, []);
+    setStorageItem(STORAGE_KEYS.ACTION_GROUPS, actionGroups);
+  }, [actionGroups]);
 
-  // Return fixed groups with no-op mutation functions
+  /**
+   * Get the next available A{n} key for actions group
+   * Uses lowest available ordinal in sparse array
+   */
+  const getNextActionKey = () => {
+    const actionsGroup = actionGroups.actions;
+    if (!actionsGroup) return 'A1';
+    
+    const existingNumbers = actionsGroup.actions
+      .map(action => {
+        const match = action.id?.match(/^A(\d+)$/);
+        return match ? parseInt(match[1]) : 0;
+      })
+      .filter(n => n > 0);
+    
+    if (existingNumbers.length === 0) return 'A1';
+    
+    // Find lowest available number
+    existingNumbers.sort((a, b) => a - b);
+    for (let i = 1; i <= existingNumbers[existingNumbers.length - 1]; i++) {
+      if (!existingNumbers.includes(i)) {
+        return `A${i}`;
+      }
+    }
+    
+    // If no gaps, use next number after max
+    return `A${existingNumbers[existingNumbers.length - 1] + 1}`;
+  };
+
+  const addActionToGroup = (groupKey, actionData) => {
+    setActionGroups(prev => {
+      const group = prev[groupKey];
+      if (!group) return prev;
+      
+      // For actions group, auto-assign next A{n} key if not provided or invalid
+      let actionId = actionData.id;
+      if (groupKey === 'actions') {
+        if (!actionId || !actionId.match(/^A\d+$/)) {
+          actionId = getNextActionKey();
+        }
+      }
+      
+      const newAction = {
+        id: actionId,
+        label: actionData.label || actionId,
+        ...(actionData.config && { config: actionData.config })
+      };
+      
+      return {
+        ...prev,
+        [groupKey]: {
+          ...group,
+          actions: [...group.actions, newAction]
+        }
+      };
+    });
+  };
+
+  const updateActionInGroup = (groupKey, actionIndex, updates) => {
+    setActionGroups(prev => {
+      const group = prev[groupKey];
+      if (!group) return prev;
+      
+      const newActions = [...group.actions];
+      newActions[actionIndex] = { ...newActions[actionIndex], ...updates };
+      
+      return {
+        ...prev,
+        [groupKey]: {
+          ...group,
+          actions: newActions
+        }
+      };
+    });
+  };
+
+  const deleteActionInGroup = (groupKey, actionIndex) => {
+    setActionGroups(prev => {
+      const group = prev[groupKey];
+      if (!group) return prev;
+      
+      return {
+        ...prev,
+        [groupKey]: {
+          ...group,
+          actions: group.actions.filter((_, i) => i !== actionIndex)
+        }
+      };
+    });
+  };
+
+  // Keep other group operations as no-ops (groups are fixed to 'actions' and 'wait')
+  const addCustomGroup = () => {};
+  const renameGroup = () => {};
+  const deleteGroup = () => {};
+
   return {
-    actionGroups: FIXED_ACTION_GROUPS,
-    // These functions are no-ops now - kept for backwards compatibility
-    addCustomGroup: () => {},
-    renameGroup: () => {},
-    deleteGroup: () => {},
-    addActionToGroup: () => {},
-    updateActionInGroup: () => {},
-    deleteActionInGroup: () => {},
+    actionGroups,
+    addActionToGroup,
+    updateActionInGroup,
+    deleteActionInGroup,
+    addCustomGroup,
+    renameGroup,
+    deleteGroup,
     exportConfig: () => {}
   };
 }

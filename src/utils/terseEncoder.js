@@ -1,31 +1,19 @@
 /**
  * Terse Match Format Encoder for QR Codes
- * Format: {n}[R|B]S{startPos}[W{sec}|A{actionId}]*
+ * Format: {n}[R|B]S{startPos}[W{sec}|A{n}]*
  * 
  * Example: 5RS1W1A1A3A1A4W1A1A5A1A6
  * - Match 5, Red, Start position 1
- * - Wait 1s, Action 1, Action 3, etc.
+ * - Wait 1s, Action A1, Action A3, etc.
  * 
  * Custom Position: S0{base64} where base64 is 6 characters encoding X, Y, ?
  * Example: 5RS0qqa8AAW1A1A3
  * - Match 5, Red, Custom position with encoded pose
+ * 
+ * Actions use A{n} format (A1, A2, A3...) and W for wait
  */
 
 import { encodePose } from './poseEncoder';
-
-// Action type to ID mapping
-const ACTION_TO_ID = {
-  'near_launch': 1,
-  'far_launch': 2,
-  'spike_1': 3,
-  'spike_2': 4,
-  'spike_3': 5,
-  'near_park': 6,
-  'far_park': 7,
-  'dump': 8,
-  'corner': 9,
-  'drive_to': 10
-};
 
 /**
  * Extract position ID from position type
@@ -89,18 +77,23 @@ export function encodeMatchToTerse(match) {
   // Start position: S{id} or S0{base64}
   terse += encodeStartPosition(match.startPosition);
   
-  // Actions: [W{sec}|A{id}]*
+  // Actions: [W{sec}|A{n}]*
   if (match.actions && match.actions.length > 0) {
     for (const action of match.actions) {
-      if (action.type === 'wait') {
+      // Action type is stored in action.type and should be 'W' or 'A{n}'
+      const actionType = action.type;
+      
+      if (actionType === 'W') {
         // Wait: W{seconds} - convert ms to seconds, round to nearest int
         const waitTimeMs = action.config?.waitTime || 1000;
         const waitTimeSec = Math.round(waitTimeMs / 1000);
         terse += `W${waitTimeSec}`;
+      } else if (actionType && actionType.match(/^A\d+$/)) {
+        // Action: A{n} - use the action type directly
+        terse += actionType;
       } else {
-        // Action: A{id}
-        const actionId = ACTION_TO_ID[action.type] || 99;
-        terse += `A${actionId}`;
+        // Unknown action type - log warning and skip
+        console.warn(`Unknown action type: ${actionType}`);
       }
     }
   }
