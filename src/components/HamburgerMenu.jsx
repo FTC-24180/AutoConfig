@@ -27,6 +27,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   themePreference = 'system',
   resolvedTheme = 'light',
   onThemeChange = () => {},
+  useInches = true,
+  onUnitsChange = () => {},
   // Props for inline configuration
   actionGroups,
   onRenameGroup,
@@ -70,7 +72,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
     templates: false,
     actionGroups: true,
     startPositions: true,
-    themePreference: true
+    themePreference: true,
+    unitsPreference: true
   });
 
   // Expose methods to parent via ref
@@ -121,7 +124,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       templates: false,
       actionGroups: true,
       startPositions: true,
-      themePreference: true
+      themePreference: true,
+      unitsPreference: true
     });
     setShowClearDataModal(true);
   };
@@ -168,6 +172,10 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       
       if (clearDataOptions.themePreference) {
         removeStorageItem(STORAGE_KEYS.THEME_PREFERENCE);
+      }
+      
+      if (clearDataOptions.unitsPreference) {
+        removeStorageItem(STORAGE_KEYS.UNITS_PREFERENCE);
       }
       
       setShowSuccessModal(true);
@@ -453,6 +461,8 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 themePreference={themePreference}
                 resolvedTheme={resolvedTheme}
                 onThemeChange={onThemeChange}
+                useInches={useInches}
+                onUnitsChange={onUnitsChange}
                 onClearAllData={handleClearAllData}
               />
             )}
@@ -581,7 +591,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7m-16 0c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                     </svg>
                     <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Data Storage</h3>
                   </div>

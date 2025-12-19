@@ -9,11 +9,11 @@ export function Step4StartPosition({
   onStartPositionChange,
   startPositions,
   onUpdateField,
+  useInches = true,
   isActive = false
 }) {
   const [adjustmentMessage, setAdjustmentMessage] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [useInches, setUseInches] = useState(true); // Default to inches
   
   // Local editing state - only used during active editing
   // This keeps display values separate from stored meters
@@ -233,24 +233,15 @@ export function Step4StartPosition({
         {startPosition.type === 'S0' && (
           <>
             <div className="bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100">Custom Position Configuration</h4>
-                
-                {/* Unit Toggle */}
-                <button
-                  onClick={() => setUseInches(!useInches)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                  {useInches ? 'Inches' : 'Meters'}
-                </button>
-              </div>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-3">Custom Position Configuration</h4>
               
               {/* Resolution info */}
               <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-200">
-                <strong>Resolution:</strong> X/Y: ~{useInches ? '0.035"' : '0.9mm'}, theta: ~0.09{'\u00B0'}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <strong>Resolution:</strong> X/Y: ~{useInches ? '0.035"' : '0.9mm'}, theta: ~0.09{'\u00B0'}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">

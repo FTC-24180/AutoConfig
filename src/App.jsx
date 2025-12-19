@@ -5,6 +5,7 @@ import { usePresets } from './hooks/usePresets';
 import { useStartPositions } from './hooks/useStartPositions';
 import { useMatches } from './hooks/useMatches';
 import { useThemePreference } from './hooks/useThemePreference';
+import { useUnitsPreference } from './hooks/useUnitsPreference';
 import { useWizardActions } from './hooks/useWizardActions';
 import { useMatchHandlers } from './hooks/useMatchHandlers';
 import { useTemplateModal } from './hooks/useTemplateModal';
@@ -37,6 +38,7 @@ function App() {
   const startPositionsHook = useStartPositions();
   const matchesHook = useMatches();
   const { preference: themePreference, setPreference: setThemePreference, resolvedTheme } = useThemePreference();
+  const { useInches, setUseInches } = useUnitsPreference();
   const { updateAvailable, updateApp, currentVersion } = useServiceWorker();
 
   const isDarkTheme = resolvedTheme === 'dark';
@@ -145,6 +147,8 @@ function App() {
     themePreference,
     resolvedTheme,
     onThemeChange: setThemePreference,
+    useInches,
+    onUnitsChange: setUseInches,
     actionGroups: actionGroupsHook.actionGroups,
     onRenameGroup: actionGroupsHook.renameGroup,
     onDeleteGroup: actionGroupsHook.deleteGroup,
@@ -223,6 +227,7 @@ function App() {
         updateCurrentMatch={updateCurrentMatch}
         updateStartPositionField={updateStartPositionField}
         startPositions={startPositionsHook.startPositions}
+        useInches={useInches}
         actionList={currentMatch?.actions || []}
         actionGroups={actionGroupsHook.actionGroups}
         expandedGroup={expandedGroup}

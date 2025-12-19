@@ -32,12 +32,14 @@ export function SettingsMenu({
   themePreference,
   resolvedTheme,
   onThemeChange,
+  useInches,
+  onUnitsChange,
   onClearAllData
 }) {
   const resolvedThemeLabel = resolvedTheme.charAt(0).toUpperCase() + resolvedTheme.slice(1);
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Theme Selector */}
       <div>
         <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Appearance</h3>
@@ -63,6 +65,42 @@ export function SettingsMenu({
           {themePreference === 'system'
             ? `Following OS preference (currently ${resolvedThemeLabel}).`
             : `Forced ${themePreference} mode.`}
+        </p>
+      </div>
+
+      {/* Units Preference */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Units</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => onUnitsChange(true)}
+            className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 min-h-[72px] ${
+              useInches
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
+            }`}
+          >
+            <svg className={`w-5 h-5 ${useInches ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Inches
+          </button>
+          <button
+            onClick={() => onUnitsChange(false)}
+            className={`p-3 rounded-lg border text-sm font-semibold transition flex flex-col items-center gap-1 min-h-[72px] ${
+              !useInches
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-100'
+            }`}
+          >
+            <svg className={`w-5 h-5 ${!useInches ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Meters
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+          Measurement units for custom starting positions. Internal storage is always in meters.
         </p>
       </div>
 

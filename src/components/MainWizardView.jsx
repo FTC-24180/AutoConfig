@@ -14,6 +14,7 @@ export function MainWizardView({
   updateCurrentMatch,
   updateStartPositionField,
   startPositions,
+  useInches,
   actionList,
   actionGroups,
   expandedGroup,
@@ -73,6 +74,7 @@ export function MainWizardView({
             onStartPositionChange={(pos) => updateCurrentMatch({ startPosition: pos })}
             startPositions={startPositions}
             onUpdateField={updateStartPositionField}
+            useInches={useInches}
             isActive={currentStep === 1}
           />
           <Step5Actions
