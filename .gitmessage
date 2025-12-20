@@ -1,0 +1,29 @@
+# Commit Message Template for Semantic Versioning
+# 
+# Use one of these formats:
+#
+# feat: add new feature (MINOR version bump: 2.6.0 ? 2.7.0)
+# fix: fix a bug (PATCH version bump: 2.6.0 ? 2.6.1)
+# feat!: breaking change (MAJOR version bump: 2.6.0 ? 3.0.0)
+# chore: maintenance task (no version bump)
+# docs: documentation only (no version bump)
+# style: code style change (no version bump)
+# refactor: code refactoring (no version bump)
+# perf: performance improvement (PATCH version bump)
+# test: add tests (no version bump)
+#
+# Examples:
+#
+# feat: add match duplication feature
+#
+# fix: resolve QR code scanning crash
+# 
+# Fixes issue where QR codes with special characters 
+# would cause the scanner to fail
+#
+# feat!: redesign storage system
+#
+# BREAKING CHANGE: Old match data format is incompatible.
+# Users must export and re-import their matches.
+#
+# More info: https://www.conventionalcommits.org/

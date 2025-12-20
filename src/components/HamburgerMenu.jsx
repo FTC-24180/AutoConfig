@@ -451,7 +451,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 setShowAddActionForm={setShowAddActionForm}
                 showAddPositionForm={showAddPositionForm}
                 setShowAddPositionForm={setShowAddPositionForm}
-                getNextStartKey={getNextStartKey}
               />
             )}
 

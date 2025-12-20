@@ -15,4 +15,7 @@
     <Folder Include="schemas\" />
     <Folder Include="scripts\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include=".github\workflows\release-please.yml" />
+  </ItemGroup>
 </Project>

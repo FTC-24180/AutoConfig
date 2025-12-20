@@ -27,7 +27,73 @@ A Progressive Web App (PWA) for configuring FTC autonomous routines. Built with 
 
 ## Deployment & Versioning
 
-### Releasing a New Version
+### Automated Versioning with Manual Control
+
+This project uses **Release Please** for semi-automated version management. Release Please creates pull requests with version bumps, giving you full control over when releases happen.
+
+**How It Works**:
+1. Push commits with conventional messages (`feat:`, `fix:`)
+2. Release Please creates a **PR with version bump**
+3. **You review and merge** the PR when ready
+4. Deployment happens automatically on merge
+
+**Commit Message Examples**:
+```bash
+# Bug fix ? PATCH (2.6.0 ? 2.6.1)
+git commit -m "fix: resolve QR code scanning issue"
+
+# New feature ? MINOR (2.6.0 ? 2.7.0)
+git commit -m "feat: add match duplication feature"
+
+# Breaking change ? MAJOR (2.6.0 ? 3.0.0)
+git commit -m "feat!: redesign storage system"
+```
+
+**Key Benefits**:
+- ? **Manual control**: Review changes before releasing
+- ? **Accumulate changes**: Multiple commits in one release
+- ? **Edit changelogs**: Modify release notes before publishing
+- ? **Strategic timing**: Release when YOU'RE ready
+
+**Helpful Commit Template**:
+To use the included commit message template:
+```bash
+git config commit.template .gitmessage
+```
+
+For detailed guidelines, see [VERSIONING.md](VERSIONING.md).
+
+### Release Workflow
+
+**Standard flow**:
+```bash
+# 1. Make changes and commit with semantic message
+git commit -m "feat: add new feature"
+git push origin main
+
+# 2. Release Please creates/updates a PR
+# (Check GitHub PRs for "chore(main): release X.X.X")
+
+# 3. Review the PR:
+#    - Check version bump is correct
+#    - Review auto-generated changelog
+#    - Make any manual edits if needed
+
+# 4. Merge the PR when ready to release
+# 5. Deployment happens automatically!
+```
+
+**Emergency releases**:
+- Push your fix with `fix:` commit
+- Release Please creates PR immediately
+- Merge PR right away for fast deployment
+
+### Releasing a New Version (Old Manual Method - DEPRECATED)
+
+**?? Manual versioning is now deprecated. Use Release Please instead (see above).**
+
+<details>
+<summary>Old manual process (for reference only)</summary>
 
 **Quick Steps**:
 1. **Edit** `public/version.js` and increment the version:
@@ -51,27 +117,40 @@ A Progressive Web App (PWA) for configuring FTC autonomous routines. Built with 
 - **MAJOR** (2.6.0 ? 3.0.0): Breaking changes, major redesign, data structure changes
 
 **Single Source of Truth**: `public/version.js` - Version is automatically injected into service worker during build
+</details>
 
 ### Automatic Deployment (GitHub Pages)
 
-The app automatically deploys to GitHub Pages when changes are pushed to the `main` branch:
+The app automatically deploys to GitHub Pages when you merge a release PR:
 
-1. **Push to Main**:
+1. **Push Commits**:
    ```bash
    git add .
-   git commit -m "Your commit message"
+   git commit -m "feat: your feature description"
    git push origin main
    ```
 
-2. **GitHub Actions**:
-   - Workflow runs automatically (`.github/workflows/deploy.yml`)
+2. **Release Please Actions**:
+   - Creates/updates a release PR with:
+     - Version bump in `package.json`
+     - Auto-generated `CHANGELOG.md` entry
+     - Release notes
+
+3. **You Merge the Release PR**:
+   - Review and merge when ready
+   - Triggers deployment workflow
+
+4. **Deployment Actions**:
+   - Injects version into build
    - Builds the app with `npm run build`
    - Deploys to `gh-pages` branch
    - Live at: `https://ftc-24180.github.io/Autofig/`
 
-3. **Check Deployment**:
+5. **Check Deployment**:
    - View progress: GitHub ? Actions tab
+   - Check release: GitHub ? Releases tab
    - Typical deployment time: 2-3 minutes
+   - Check releases: GitHub ? Releases tab
 
 ### Manual Deployment
 
