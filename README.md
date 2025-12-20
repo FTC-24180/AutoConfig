@@ -2,8 +2,6 @@
 
 A Progressive Web App (PWA) for configuring FTC autonomous routines. Built with React and TailwindCSS, this mobile-first application helps teams quickly create, manage, and deploy autonomous configurations for multiple matches.
 
-## Current Version: 2.6.0
-
 **Live App**: https://Autofig.bluebananas.org
 
 ---
@@ -18,191 +16,12 @@ A Progressive Web App (PWA) for configuring FTC autonomous routines. Built with 
 - [Data Management](#data-management)
 - [Troubleshooting](#troubleshooting)
 
-### For Developers
-- [Development](#development)
-- [Deployment & Versioning](#deployment--versioning)
-- [Support](#support)
+### For Contributors
+- [Contributing Guide](CONTRIBUTING.md) - Setup, development, and deployment
+- [Versioning Guide](VERSIONING.md) - Commit message standards
+- [Development Setup](#development-setup)
 
 ---
-
-## Deployment & Versioning
-
-### Automated Versioning with Manual Control
-
-This project uses **Release Please** for semi-automated version management. Release Please creates pull requests with version bumps, giving you full control over when releases happen.
-
-**How It Works**:
-1. Push commits with conventional messages (`feat:`, `fix:`)
-2. Release Please creates a **PR with version bump**
-3. **You review and merge** the PR when ready
-4. Deployment happens automatically on merge
-
-**Commit Message Examples**:
-```bash
-# Bug fix ? PATCH (2.6.0 ? 2.6.1)
-git commit -m "fix: resolve QR code scanning issue"
-
-# New feature ? MINOR (2.6.0 ? 2.7.0)
-git commit -m "feat: add match duplication feature"
-
-# Breaking change ? MAJOR (2.6.0 ? 3.0.0)
-git commit -m "feat!: redesign storage system"
-```
-
-**Key Benefits**:
-- ? **Manual control**: Review changes before releasing
-- ? **Accumulate changes**: Multiple commits in one release
-- ? **Edit changelogs**: Modify release notes before publishing
-- ? **Strategic timing**: Release when YOU'RE ready
-
-**Helpful Commit Template**:
-To use the included commit message template:
-```bash
-git config commit.template .gitmessage
-```
-
-For detailed guidelines, see [VERSIONING.md](VERSIONING.md).
-
-### Release Workflow
-
-**Standard flow**:
-```bash
-# 1. Make changes and commit with semantic message
-git commit -m "feat: add new feature"
-git push origin main
-
-# 2. Release Please creates/updates a PR
-# (Check GitHub PRs for "chore(main): release X.X.X")
-
-# 3. Review the PR:
-#    - Check version bump is correct
-#    - Review auto-generated changelog
-#    - Make any manual edits if needed
-
-# 4. Merge the PR when ready to release
-# 5. Deployment happens automatically!
-```
-
-**Emergency releases**:
-- Push your fix with `fix:` commit
-- Release Please creates PR immediately
-- Merge PR right away for fast deployment
-
-### Releasing a New Version (Old Manual Method - DEPRECATED)
-
-**?? Manual versioning is now deprecated. Use Release Please instead (see above).**
-
-<details>
-<summary>Old manual process (for reference only)</summary>
-
-**Quick Steps**:
-1. **Edit** `public/version.js` and increment the version:
-   ```javascript
-   export const VERSION = '2.6.0'; // Change this number
-   ```
-
-2. **Commit and Push**:
-   ```bash
-   git add public/version.js
-   git commit -m "Release v2.7.0"
-   git push origin main
-   ```
-
-3. **Auto-Deploy**: GitHub Actions automatically builds and deploys to GitHub Pages
-4. **Users Auto-Update**: Within minutes of returning to the app, users see an "Update Available" notification
-
-**Version Guidelines** (Semantic Versioning):
-- **PATCH** (2.6.0 ? 2.6.1): Bug fixes, typos, minor tweaks
-- **MINOR** (2.6.0 ? 2.7.0): New features, improvements, UI changes
-- **MAJOR** (2.6.0 ? 3.0.0): Breaking changes, major redesign, data structure changes
-
-**Single Source of Truth**: `public/version.js` - Version is automatically injected into service worker during build
-</details>
-
-### Automatic Deployment (GitHub Pages)
-
-The app automatically deploys to GitHub Pages when you merge a release PR:
-
-1. **Push Commits**:
-   ```bash
-   git add .
-   git commit -m "feat: your feature description"
-   git push origin main
-   ```
-
-2. **Release Please Actions**:
-   - Creates/updates a release PR with:
-     - Version bump in `package.json`
-     - Auto-generated `CHANGELOG.md` entry
-     - Release notes
-
-3. **You Merge the Release PR**:
-   - Review and merge when ready
-   - Triggers deployment workflow
-
-4. **Deployment Actions**:
-   - Injects version into build
-   - Builds the app with `npm run build`
-   - Deploys to `gh-pages` branch
-   - Live at: `https://ftc-24180.github.io/Autofig/`
-
-5. **Check Deployment**:
-   - View progress: GitHub ? Actions tab
-   - Check release: GitHub ? Releases tab
-   - Typical deployment time: 2-3 minutes
-   - Check releases: GitHub ? Releases tab
-
-### Manual Deployment
-
-#### To GitHub Pages
-
-```bash
-npm run build
-npm install -g gh-pages  # If not already installed
-gh-pages -d dist
-```
-
-#### To Other Hosting Services
-
-1. **Build the App**:
-   ```bash
-   npm run build
-   ```
-
-2. **Upload `dist/` folder** to your hosting provider:
-   - **Netlify**: Drag `dist/` to Netlify drop zone
-   - **Vercel**: `vercel --prod`
-   - **Firebase**: `firebase deploy`
-   - **AWS S3**: Upload to S3 bucket with static hosting enabled
-
-3. **Configure Base Path** (if not at root):
-   - Edit `vite.config.js`
-   - Set `base: '/your-path/'`
-   - Rebuild
-
-### Auto-Update System
-
-The app uses a smart update system that eliminates the need for hard refreshes:
-
-- **When Deployed**: New version is automatically detected when users return to the app
-- **User Experience**: "Update Available" notification with one-click update
-- **No Data Loss**: All matches, templates, and settings are preserved
-- **No Manual Cache Clearing**: Service worker handles everything automatically
-
-**What Users See**:
-1. Deploy new version (after incrementing `public/version.js`)
-2. User switches back to app tab ? Update detected
-3. Banner appears: "Update Available! (v2.7.0)"
-4. User clicks "Update Now" ? App reloads with new version
-5. Done! No hard refresh or cache clearing needed
-
-### PWA Installation
-
-Once deployed, users can install the app:
-
-- **iOS**: Safari ? Share ? Add to Home Screen
-- **Android**: Chrome ? Menu ? Install App
-- **Desktop**: Chrome ? Address bar ? Install icon
 
 ## Quick Start
 
@@ -387,76 +206,36 @@ Customize preset starting positions:
 - See examples/TERSE_FORMAT.md for format specification
 
 ### Update notification not appearing after deployment
-- Verify you incremented the version in `public/version.js`
+- Verify version was incremented during release
 - Check browser console for service worker logs
 - Try closing and reopening the app tab
 - Wait a few moments after deployment (service worker needs time to register)
 
 ---
 
-## Development
+## Development Setup
 
-This section is for developers working on the Autofig codebase.
+**Quick Start for Contributors**:
 
-### Prerequisites
+```bash
+# Clone and install
+git clone https://github.com/FTC-24180/Autofig.git
+cd Autofig
+npm install
 
-- **Node.js**: Version 20.19+ or 22.12+ (Vite requirement)
-- **npm**: Comes with Node.js
+# Start dev server
+npm run dev
+# Open http://localhost:5173
 
-### Setup
+# Build for production
+npm run build
+```
 
-#### Using Visual Studio
-
-1. **Open the Solution**:
-   - Open Visual Studio
-   - File ? Open ? Project/Solution
-   - Select `Autofig.sln` (if present) or open the folder directly
-
-2. **Install Dependencies**:
-   - Open the integrated terminal (View ? Terminal)
-   - Run: `npm install`
-
-3. **Start Development Server**:
-   - Run: `npm run dev`
-   - Or use Task Runner Explorer if configured
-   - App will be available at `http://localhost:5173/`
-
-4. **Build for Production**:
-   - Run: `npm run build`
-   - Built files appear in the `dist/` directory
-
-#### Using Command Line (Non-IDE)
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/FTC-24180/Autofig.git
-   cd Autofig
-   ```
-
-2. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Start Development Server**:
-   ```bash
-   npm run dev
-   ```
-   - App will be available at `http://localhost:5173/`
-   - Hot Module Replacement (HMR) is enabled for instant updates
-
-4. **Build for Production**:
-   ```bash
-   npm run build
-   ```
-   - Optimized files are generated in `dist/`
-   - Includes tree-shaking, minification, and asset optimization
-
-5. **Preview Production Build**:
-   ```bash
-   npm run preview
-   ```
-   - Test the production build locally before deployment
+**For detailed contribution guidelines**, see [CONTRIBUTING.md](CONTRIBUTING.md), including:
+- Deployment workflows
+- Version management with Release Please
+- Commit message standards
+- Project architecture
 
 ### Project Structure
 
@@ -465,154 +244,42 @@ Autofig/
 ??? public/                      # Static assets
 ?   ??? manifest.json           # PWA manifest
 ?   ??? sw.js                   # Service worker
-?   ??? version.js              # App version (single source of truth)
+?   ??? version.js              # App version (auto-injected by CI/CD)
 ?   ??? icon-512.svg            # App icon
-?   ??? vite.svg                # Vite logo
 ??? src/
 ?   ??? components/             # React components
 ?   ?   ??? common/            # Reusable components
-?   ?   ?   ??? AddItemForm.jsx
-?   ?   ?   ??? BaseModal.jsx
-?   ?   ?   ??? InlineAddForm.jsx
 ?   ?   ??? config/            # Configuration management
-?   ?   ?   ??? ActionsConfigContent.jsx
-?   ?   ?   ??? StartPositionsConfigContent.jsx
 ?   ?   ??? menu/              # Menu components
-?   ?   ?   ??? ConfigurationMenu.jsx
-?   ?   ?   ??? MatchesMenu.jsx
-?   ?   ?   ??? SettingsMenu.jsx
-?   ?   ?   ??? TemplatesMenu.jsx
 ?   ?   ??? steps/             # Wizard step components
-?   ?   ?   ??? Step1MatchSetup.jsx    # Match details (number, team, alliance)
-?   ?   ?   ??? Step4StartPosition.jsx # Start position selection
-?   ?   ?   ??? Step5Actions.jsx       # Action sequence builder
-?   ?   ?   ??? Step6QRCode.jsx        # QR code generation
-?   ?   ??? ActionPicker.jsx
-?   ?   ??? ActionPickerPanel.jsx
-?   ?   ??? ActionSequence.jsx
-?   ?   ??? AllianceIcon.jsx
-?   ?   ??? ClearDataModal.jsx
-?   ?   ??? ClearDataSuccessModal.jsx
-?   ?   ??? ConfirmClearDataModal.jsx
-?   ?   ??? DeleteConfigurationModal.jsx
-?   ?   ??? DeleteMatchModal.jsx
-?   ?   ??? HamburgerMenu.jsx
-?   ?   ??? LoadTemplateModal.jsx
-?   ?   ??? MainWizardView.jsx
-?   ?   ??? SaveTemplateModal.jsx
-?   ?   ??? StartPositionPicker.jsx
-?   ?   ??? StartPositionPickerPanel.jsx
-?   ?   ??? UpdateNotification.jsx
-?   ?   ??? WelcomeScreen.jsx
-?   ?   ??? WizardContainer.jsx
-?   ?   ??? WizardNavigation.jsx
-?   ?   ??? WizardStep.jsx
 ?   ??? hooks/                  # Custom React hooks
-?   ?   ??? useActionGroups.js       # Action groups management
-?   ?   ??? useAngleUnitsPreference.js
-?   ?   ??? useDragAndDrop.js
-?   ?   ??? useMatches.js            # Match CRUD operations
-?   ?   ??? useMatchHandlers.js
-?   ?   ??? usePresets.js            # Configuration templates
-?   ?   ??? useServiceWorker.js      # PWA update handling
-?   ?   ??? useStartPositions.js
-?   ?   ??? useTemplateModal.js
-?   ?   ??? useThemePreference.js
-?   ?   ??? useUnitsPreference.js
-?   ?   ??? useWizardActions.js
 ?   ??? utils/                  # Utility functions
-?   ?   ??? actionUtils.js          # Action validation & display
-?   ?   ??? configUtils.js          # JSON export utilities
-?   ?   ??? poseEncoder.js          # Position encoding
-?   ?   ??? presetUtils.js          # Template loading
-?   ?   ??? storageUtils.js         # LocalStorage wrapper
-?   ?   ??? terseEncoder.js         # Compact format encoding
-?   ?   ??? themeUtils.js           # Theme calculations
-?   ??? App.jsx                 # Main app component
-?   ??? main.jsx                # Entry point
-?   ??? index.css               # Global styles (Tailwind)
-??? examples/                   # Integration examples (Java)
-?   ??? java/                   # Java OpMode examples
-?   ??? INTEGRATION_GUIDE.md    # OpMode integration guide
-?   ??? TERSE_FORMAT.md         # Terse format specification
-??? dist/                       # Production build output (generated)
-??? index.html                  # HTML template
-??? vite.config.js              # Vite configuration
-??? tailwind.config.js          # Tailwind CSS configuration
-??? package.json                # Dependencies and scripts
+??? examples/                   # FTC OpMode integration examples
+??? .github/workflows/          # CI/CD automation
+?   ??? release-please.yml     # Creates release PRs
+?   ??? deploy.yml             # Deploys on release
+??? dist/                       # Production build (generated)
 ```
-
-**Key Directories**:
-- **`components/common/`**: Shared UI components (forms, modals)
-- **`components/config/`**: Configuration management UI
-- **`components/menu/`**: Hamburger menu sections
-- **`components/steps/`**: Wizard step screens (4 steps total)
-- **`hooks/`**: Custom React hooks for state management
-- **`utils/`**: Pure functions for encoding, storage, validation
-- **`examples/`**: FTC OpMode integration code and docs
 
 ### Key Technologies
 
 - **React 19**: UI framework with hooks
-- **Vite 7**: Build tool and dev server with HMR
-- **TailwindCSS 3**: Utility-first CSS framework with dark mode support
-- **qrcode.react**: QR code generation library
-- **LocalStorage API**: Client-side data persistence
-
-### Code Architecture
-
-- **Component-Based**: Modular React components with clear separation of concerns
-- **Custom Hooks**: Reusable state management logic (matches, actions, positions, preferences)
-- **Portal-Based Modals**: Action picker and modals use React portals
-- **Terse Format**: Compact QR code encoding for efficient scanning
-- **Progressive Web App**: Service worker for offline support and auto-updates
-
-**Storage Limits**: ~5-10MB per domain (browser-dependent). This is sufficient for hundreds of matches.
-
-### Environment Configuration
-
-For different environments, create `.env` files:
-
-```bash
-# .env.production
-VITE_API_URL=https://api.example.com
-VITE_APP_TITLE=FTC Autofig
-```
-
-Access in code:
-```javascript
-const apiUrl = import.meta.env.VITE_API_URL;
-```
+- **Vite 7**: Build tool and dev server
+- **TailwindCSS 3**: Utility-first CSS with dark mode
+- **qrcode.react**: QR code generation
+- **Release Please**: Automated version management
 
 ---
 
 ## Support
 
 For issues or questions:
-- Create an issue on GitHub: https://github.com/FTC-24180/Autofig/issues
-- Contact the programming team lead
-- Check the `examples/` directory for OpMode integration help
-
-## Recent Changes (v2.6.0)
-
-### Code Cleanup
-- Removed unused schema validation code (now focuses on terse format)
-- Removed obsolete step components (consolidated into Step1MatchSetup)
-- Removed unused modal components (ManageActionsModal, ManageStartPositionsModal)
-- Cleaned up backwards compatibility code
-
-### Architecture Improvements
-- Streamlined wizard flow (4 steps instead of 6)
-- Fixed action group structure (Actions + Wait only)
-- Improved menu organization with dedicated submenu components
-- Better separation between match data and configuration templates
-
-### Current Step Flow
-1. **Match Setup** - Match number, partner team, alliance color (consolidated)
-2. **Start Position** - Position selection with custom coordinates
-3. **Actions** - Action sequence builder with drag-and-drop
-4. **QR Code** - Terse format QR generation and JSON export
+- Create an issue: https://github.com/FTC-24180/Autofig/issues
+- Check [CONTRIBUTING.md](CONTRIBUTING.md) for development help
+- See `examples/` directory for OpMode integration
 
 ---
 
-## Version History
+## License
+
+This project is open source and available for FTC teams to use and modify.
