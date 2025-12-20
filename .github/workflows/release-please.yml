@@ -12,6 +12,10 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -27,3 +31,10 @@ jobs:
           echo "Release created: ${{ steps.release.outputs.release_created }}"
           echo "Tag: ${{ steps.release.outputs.tag_name }}"
           echo "Version: ${{ steps.release.outputs.version }}"
+          
+  # Trigger deployment when release is created
+  deploy:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
