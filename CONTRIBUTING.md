@@ -1,4 +1,4 @@
-# ?? Quick Start Guide for Contributors
+﻿# 🚀 Quick Start Guide for Contributors
 
 ## New to the Project?
 
@@ -32,17 +32,22 @@ Edit files in `src/` directory. The app will hot-reload automatically.
 **Important**: Use conventional commit messages for automatic versioning!
 
 ```bash
-# Bug fix ? Version 1.0.0 ? 1.0.1
+# Bug fix → Version 1.0.0 → 1.0.1
 git commit -m "fix: resolve QR scanning crash"
 
-# New feature ? Version 1.0.0 ? 1.1.0
+# New feature → Version 1.0.0 → 1.1.0
 git commit -m "feat: add match export feature"
 
-# Breaking change ? Version 1.0.0 ? 2.0.0
+# Breaking change → Version 1.0.0 → 2.0.0
 git commit -m "feat!: redesign storage system"
 ```
 
-See [VERSIONING.md](VERSIONING.md) for more examples.
+**Need more examples?** See [VERSIONING.md](VERSIONING.md) for comprehensive guide.
+
+**Commit template helper:**
+```bash
+git config commit.template .gitmessage
+```
 
 ### 3. Push Your Changes
 ```bash
@@ -52,10 +57,10 @@ git push origin main
 ### 4. Review the Release PR
 
 Release Please will automatically:
-- ? Create or update a release PR
-- ? Calculate the new version
-- ? Update CHANGELOG.md
-- ? Wait for your review
+- ✅ Create or update a release PR
+- ✅ Calculate the new version
+- ✅ Update CHANGELOG.md
+- ✅ Wait for your review
 
 **Check GitHub PRs** for: "chore(main): release X.X.X"
 
@@ -90,7 +95,7 @@ git commit -m "fix: bug fix"
 git push  # PR still open
 
 # Thursday - Ready!
-# Merge the PR ? All changes release together
+# Merge the PR → All changes release together
 ```
 
 ### Emergency Release
@@ -106,111 +111,6 @@ git push
 
 ---
 
-## Automated Deployment
-
-### How It Works
-
-This project uses **Release Please** for version management and **GitHub Actions** for deployment.
-
-**The Flow**:
-1. You push commits with semantic messages (`feat:`, `fix:`, etc.)
-2. Release Please creates/updates a PR with version bump
-3. You review and merge the PR
-4. GitHub Actions automatically:
-   - Creates a GitHub Release
-   - Builds the app
-   - Injects the version number
-   - Deploys to GitHub Pages
-
-### GitHub Actions Workflows
-
-#### `.github/workflows/release-please.yml`
-Runs on every push to `main`. Creates or updates a release PR.
-
-**What it does**:
-- Analyzes commit messages since last release
-- Calculates new version (semver)
-- Updates `package.json`
-- Generates/updates `CHANGELOG.md`
-- Creates PR titled "chore(main): release X.X.X"
-
-#### `.github/workflows/deploy.yml`
-Runs when a release PR is merged (on release published).
-
-**What it does**:
-1. Checks out the code
-2. Installs dependencies (`npm ci`)
-3. Gets version from `package.json`
-4. **Injects version** into `public/version.js`:
-   ```javascript
-   export const VERSION = '1.0.0';
-   ```
-5. Builds the app (`npm run build`)
-6. Deploys to GitHub Pages
-7. Live at: https://ftc-24180.github.io/Autofig/
-
-**Typical deployment time**: 2-3 minutes from merge to live.
-
-### Version Injection
-
-**Source file** (`public/version.js` in repo):
-```javascript
-export const VERSION = '0.0.0-dev';
-```
-
-**During CI/CD build**:
-```javascript
-export const VERSION = '1.0.0';
-```
-
-**Why?**
-- Source code always shows `0.0.0-dev` for local development
-- CI/CD injects the real version from `package.json` during build
-- Deployed app shows the actual release version
-- Single source of truth: `package.json` version
-
-### Checking Deployment Status
-
-1. **Watch the Actions**: https://github.com/FTC-24180/Autofig/actions
-2. **Check Releases**: https://github.com/FTC-24180/Autofig/releases
-3. **Verify Live**: Open the app and check Help & Info
-
-### Manual Deployment (Rare)
-
-If you need to deploy without a release:
-
-1. Go to: https://github.com/FTC-24180/Autofig/actions/workflows/deploy.yml
-2. Click **"Run workflow"** dropdown
-3. Click green **"Run workflow"** button
-
-This builds and deploys the current `main` branch immediately.
-
----
-
-## Auto-Update System
-
-The app uses a smart update system:
-
-**How it works**:
-1. New version deployed ? Service worker detects it
-2. User returns to app ? Update banner appears
-3. User clicks "Update Now" ? App reloads with new version
-4. All data preserved (matches, templates, settings)
-
-**User Experience**:
-- No manual cache clearing needed
-- No hard refresh required
-- One-click update
-- Seamless transition
-
-**Implementation**:
-- Service worker checks version on load
-- Compares deployed version vs cached version
-- Shows `UpdateNotification` component if mismatch
-- See `src/hooks/useServiceWorker.js` for details
-
----
-
 ## Common Tasks
 
 ### Check if Your Code Builds
@@ -223,13 +123,6 @@ npm run build
 npm run preview
 ```
 
-### Set Up Commit Template
-```bash
-git config commit.template .gitmessage
-```
-
-This gives you helpful hints when writing commits!
-
 ### Run Linter
 ```bash
 npm run lint
@@ -241,58 +134,99 @@ npm run lint
 
 ```
 src/
-??? components/     # React UI components
-?   ??? common/    # Reusable components (forms, modals)
-?   ??? config/    # Configuration management UI
-?   ??? menu/      # Hamburger menu sections
-?   ??? steps/     # Wizard step screens
-??? hooks/          # Custom React hooks
-?   ??? useMatches.js         # Match CRUD operations
-?   ??? useActionGroups.js    # Action management
-?   ??? useServiceWorker.js   # PWA updates
-?   ??? ...
-??? utils/          # Helper functions
-    ??? terseEncoder.js       # QR code encoding
-    ??? storageUtils.js       # LocalStorage wrapper
-    ??? ...
+├── components/     # React UI components
+│   ├── common/    # Reusable components (forms, modals)
+│   ├── config/    # Configuration management UI
+│   ├── menu/      # Hamburger menu sections
+│   └── steps/     # Wizard step screens
+├── hooks/          # Custom React hooks
+│   ├── useMatches.js         # Match CRUD operations
+│   ├── useActionGroups.js    # Action management
+│   ├── useServiceWorker.js   # PWA updates
+│   └── ...
+└── utils/          # Helper functions
+    ├── terseEncoder.js       # QR code encoding
+    ├── storageUtils.js       # LocalStorage wrapper
+    └── ...
 
 public/
-??? version.js      # Auto-replaced by CI/CD
-??? sw.js           # Service worker
-??? manifest.json   # PWA manifest
+├── version.js      # Auto-replaced by CI/CD
+├── sw.js           # Service worker
+└── manifest.json   # PWA manifest
 
 .github/workflows/
-??? release-please.yml  # Creates release PRs
-??? deploy.yml          # Deploys on release
+├── release-please.yml  # Creates release PRs
+└── deploy.yml          # Deploys on release
 ```
 
 **Key Files**:
-- **`public/version.js`**: Version shown in app (CI/CD injects real version)
 - **`package.json`**: Single source of truth for version
 - **`CHANGELOG.md`**: Auto-generated by Release Please
+- **`public/version.js`**: Shows `0.0.0-dev` locally, real version in production
 - **`.gitmessage`**: Commit message template (optional)
 
 ---
 
-## Deployment Environments
+## Deployment
 
-### Production (GitHub Pages)
-- **URL**: https://ftc-24180.github.io/Autofig/
-- **Also available at**: https://Autofig.bluebananas.org
-- **Deploy trigger**: Merge release PR
-- **Branch**: `gh-pages` (auto-managed)
+### How It Works
 
-### Local Development
-- **URL**: http://localhost:5173
-- **Version shown**: `0.0.0-dev`
-- **Hot reload**: Enabled
+1. You push commits with semantic messages (`feat:`, `fix:`)
+2. Release Please creates/updates a PR with version bump
+3. You review and merge the PR when ready
+4. GitHub Actions automatically:
+   - Creates a GitHub Release
+   - Builds the app (injects version from `package.json`)
+   - Deploys to GitHub Pages
 
-### Preview Production Build
+**Time from merge to live**: ~2-3 minutes
+
+### Deployment Environments
+
+**Production**:
+- URL: https://Autofig.bluebananas.org
+- Deploy trigger: Merge release PR
+
+**Local Development**:
+- URL: http://localhost:5173
+- Version shown: `0.0.0-dev`
+- Hot reload: Enabled
+
+**Preview Production Build**:
 ```bash
 npm run build
 npm run preview
 # Opens at http://localhost:4173
 ```
+
+### Check Deployment Status
+
+1. **Watch Actions**: https://github.com/FTC-24180/Autofig/actions
+2. **Check Releases**: https://github.com/FTC-24180/Autofig/releases
+3. **Verify Live**: Open app → Help & Info → Check version
+
+### Manual Deployment (Rare)
+
+If you need to deploy without a release:
+
+1. Go to: https://github.com/FTC-24180/Autofig/actions/workflows/deploy.yml
+2. Click **"Run workflow"**
+3. This deploys current `main` branch immediately
+
+---
+
+## Auto-Update System
+
+The app automatically notifies users when a new version is deployed:
+
+1. New version deployed → Service worker detects it
+2. User returns to app → "Update Available" banner appears
+3. User clicks "Update Now" → App reloads with new version
+4. All data preserved (matches, templates, settings)
+
+**No manual cache clearing or hard refresh needed!**
+
+Implementation: See `src/hooks/useServiceWorker.js`
 
 ---
 
@@ -300,104 +234,92 @@ npm run preview
 
 Once deployed, users can install the app:
 
-- **iOS**: Safari ? Share ? Add to Home Screen
-- **Android**: Chrome ? Menu ? Install App
-- **Desktop**: Chrome ? Address bar ? Install icon
-
-**What gets installed**:
-- Offline-capable app
-- App icon on home screen/desktop
-- Standalone window (no browser UI)
-- Service worker for background updates
-
----
-
-## Need Help?
-
-- **Versioning**: See [VERSIONING.md](VERSIONING.md)
-- **Full docs**: See [README.md](README.md)
-- **Issues**: Open an issue on GitHub
+- **iOS**: Safari → Share → Add to Home Screen
+- **Android**: Chrome → Menu → Install App
+- **Desktop**: Chrome → Address bar → Install icon
 
 ---
 
 ## Tips
 
-? **DO**: Use semantic commit messages (`feat:`, `fix:`, etc.)  
-? **DO**: Test your changes locally before pushing  
-? **DO**: Keep commits focused and atomic  
-? **DO**: Review release PRs before merging  
-? **DO**: Accumulate related changes into one release  
+✅ **DO**:
+- Use semantic commit messages (`feat:`, `fix:`, etc.)
+- Test your changes locally before pushing
+- Keep commits focused and atomic
+- Review release PRs before merging
+- Accumulate related changes into one release
 
-? **DON'T**: Manually edit version numbers in `package.json`  
-? **DON'T**: Edit `CHANGELOG.md` directly (Release Please manages it)  
-? **DON'T**: Use vague commit messages like "update"  
-? **DON'T**: Commit broken code to main  
-? **DON'T**: Merge release PRs without reviewing  
+❌ **DON'T**:
+- Manually edit version numbers in `package.json`
+- Edit `CHANGELOG.md` directly (Release Please manages it)
+- Use vague commit messages like "update"
+- Commit broken code to main
+- Merge release PRs without reviewing
+
+---
+
+## Troubleshooting
+
+### Release PR not created
+- Check commit messages use semantic format (`feat:`, `fix:`)
+- Verify you didn't only use `chore:`, `docs:`, or `style:` (these don't trigger releases)
+- Check GitHub Actions logs for errors
+
+### Deployment failed
+- Check Actions tab: https://github.com/FTC-24180/Autofig/actions
+- Common issues:
+  - Node.js version mismatch (need 20.19+ or 22.12+)
+  - npm install failures
+  - Build errors (run `npm run lint` locally)
+
+### Wrong version showing in app
+- Version comes from last successful deployment
+- Trigger manual deployment if needed
+- Clear browser cache and reload
+
+### Service worker not updating
+- Hard refresh: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
+- Clear site data: DevTools → Application → Clear storage
+
+**More help?** See [VERSIONING.md](VERSIONING.md) for detailed troubleshooting.
+
+---
+
+## Need Help?
+
+- **Detailed versioning guide**: [VERSIONING.md](VERSIONING.md)
+- **User documentation**: [README.md](README.md)
+- **Report issues**: https://github.com/FTC-24180/Autofig/issues
 
 ---
 
 ## Release Flow
 
 ```
-Your commits ? Push to main
-    ?
+Your commits → Push to main
+    ↓
 Release Please creates/updates PR
-    ?
+    ↓
 You review the PR
-    ?
+    ↓
 You merge when ready
-    ?
+    ↓
 GitHub Release created
-    ?
-CI/CD injects version
-    ?
+    ↓
 Build & Deploy to GitHub Pages
-    ?
-Live on web! ??
+    ↓
+Live on web! 🎉
 ```
 
-**Time from merge to live**: ~2-3 minutes
+**Why this workflow?**
+- ✅ You control timing (merge PR when ready)
+- ✅ Review first (see exactly what's releasing)
+- ✅ Combine changes (multiple commits in one release)
+- ✅ Edit notes (improve changelog before release)
+- ✅ No surprises (WIP commits won't trigger releases)
+
+Read more: [VERSIONING.md](VERSIONING.md#why-release-please)
 
 ---
 
-## Key Difference from Auto-Release Tools
-
-Unlike tools that release immediately on every commit:
-- ? **You control timing**: Merge PR when ready
-- ? **Review first**: See exactly what's releasing
-- ? **Combine changes**: Multiple commits in one release
-- ? **Edit notes**: Improve changelog before release
-- ? **No surprises**: WIP commits won't trigger releases
-
----
-
-## Troubleshooting Deployment
-
-### Release PR not created
-- Check commit messages use semantic format (`feat:`, `fix:`)
-- Verify GitHub Actions workflow is enabled
-- Check Actions tab for errors
-
-### Deployment failed
-- Check Actions tab: https://github.com/FTC-24180/Autofig/actions
-- Common issues:
-  - Node.js version mismatch
-  - npm install failures
-  - Build errors (check lint/syntax)
-  - GitHub Pages not enabled
-
-### Wrong version showing in app
-- Version comes from last successful deployment
-- Check when last deployment ran (Actions tab)
-- Trigger manual deployment if needed
-- Clear browser cache and reload
-
-### Service worker not updating
-- Check browser console (F12) for errors
-- Hard refresh: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
-- Clear site data: DevTools ? Application ? Clear storage
-- Verify `public/sw.js` has correct cache name
-
----
-
-Happy coding! ??
+Happy coding! 🚀
