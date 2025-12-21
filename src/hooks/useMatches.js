@@ -244,16 +244,20 @@ export function useMatches() {
     // Save the template
     const success = setStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, template);
     
-    // Remove the template match from the matches array
-    setMatches(prev => prev.filter(m => m.id !== matchId));
-    
-    // Select the first real match if available
-    const realMatches = matches.filter(m => !m.isTemplate);
-    if (realMatches.length > 0) {
-      setCurrentMatchId(realMatches[0].id);
-    } else {
-      setCurrentMatchId(null);
-    }
+    // Remove the template match from the matches array and select first real match
+    setMatches(prev => {
+      const filtered = prev.filter(m => m.id !== matchId);
+      const realMatches = filtered.filter(m => !m.isTemplate);
+      
+      // Update current match selection
+      if (realMatches.length > 0) {
+        setCurrentMatchId(realMatches[0].id);
+      } else {
+        setCurrentMatchId(null);
+      }
+      
+      return filtered;
+    });
     
     return success;
   };
@@ -263,15 +267,19 @@ export function useMatches() {
     if (!match || !match.isTemplate) return;
 
     // Remove the template match from the matches array without saving
-    setMatches(prev => prev.filter(m => m.id !== matchId));
-    
-    // Select the first real match if available
-    const realMatches = matches.filter(m => !m.isTemplate);
-    if (realMatches.length > 0) {
-      setCurrentMatchId(realMatches[0].id);
-    } else {
-      setCurrentMatchId(null);
-    }
+    setMatches(prev => {
+      const filtered = prev.filter(m => m.id !== matchId);
+      const realMatches = filtered.filter(m => !m.isTemplate);
+      
+      // Update current match selection
+      if (realMatches.length > 0) {
+        setCurrentMatchId(realMatches[0].id);
+      } else {
+        setCurrentMatchId(null);
+      }
+      
+      return filtered;
+    });
   };
 
   return {
