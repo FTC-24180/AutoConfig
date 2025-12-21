@@ -72,7 +72,7 @@ export function MainWizardView({
       <div className="flex-1 overflow-hidden">
         <WizardContainer currentStep={currentStep} onStepChange={onStepChange}>
           <Step1MatchSetup
-            matchNumber={currentMatch?.matchNumber ?? 1}
+            matchNumber={currentMatch?.matchNumber != null ? currentMatch.matchNumber : 1}
             partnerTeam={currentMatch?.partnerTeam || ''}
             alliance={currentMatch?.alliance || 'red'}
             onMatchNumberChange={(num) => updateCurrentMatch({ matchNumber: num })}
