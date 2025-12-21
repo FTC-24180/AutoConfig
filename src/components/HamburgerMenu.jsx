@@ -50,6 +50,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   // Props for default match template
   onSaveDefaultMatchTemplate,
   onLoadDefaultMatchTemplate,
+  onViewEditDefaultMatchTemplate,
   hasDefaultMatchTemplate
 }, ref) {
   const [isOpen, setIsOpen] = useState(false);
@@ -416,6 +417,7 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 onExportJSON={onExportJSON}
                 onSaveDefaultTemplate={onSaveDefaultMatchTemplate}
                 onLoadDefaultTemplate={onLoadDefaultMatchTemplate}
+                onViewEditTemplate={onViewEditDefaultMatchTemplate}
                 hasDefaultTemplate={hasDefaultMatchTemplate}
                 onClose={closeMenu}
               />

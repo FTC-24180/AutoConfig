@@ -205,6 +205,73 @@ export function useMatches() {
     return newMatch.id;
   };
 
+  const loadTemplateAsMatch = () => {
+    const template = loadDefaultMatchTemplate();
+    if (!template) return null;
+
+    // Create a virtual match with match number 0 for editing the template
+    const templateMatch = {
+      id: 'template-match-0',
+      matchNumber: 0,
+      partnerTeam: '',
+      alliance: 'red',
+      startPosition: template.startPosition,
+      actions: template.actions.map(action => ({
+        ...action,
+        id: crypto.randomUUID() // Generate temporary UUID for editing
+      })),
+      isTemplate: true // Flag to indicate this is the template
+    };
+    
+    // Add template match to the beginning of matches array temporarily
+    setMatches(prev => [templateMatch, ...prev]);
+    setCurrentMatchId(templateMatch.id);
+    return templateMatch.id;
+  };
+
+  const saveTemplateFromMatch = (matchId) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match || !match.isTemplate) return false;
+
+    const template = {
+      startPosition: match.startPosition,
+      // eslint-disable-next-line no-unused-vars
+      actions: match.actions.map(({ id, ...rest }) => rest) // Omit internal UUID
+    };
+    
+    // Save the template
+    const success = setStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, template);
+    
+    // Remove the template match from the matches array
+    setMatches(prev => prev.filter(m => m.id !== matchId));
+    
+    // Select the first real match if available
+    const realMatches = matches.filter(m => !m.isTemplate);
+    if (realMatches.length > 0) {
+      setCurrentMatchId(realMatches[0].id);
+    } else {
+      setCurrentMatchId(null);
+    }
+    
+    return success;
+  };
+
+  const deleteTemplateMatch = (matchId) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match || !match.isTemplate) return;
+
+    // Remove the template match from the matches array without saving
+    setMatches(prev => prev.filter(m => m.id !== matchId));
+    
+    // Select the first real match if available
+    const realMatches = matches.filter(m => !m.isTemplate);
+    if (realMatches.length > 0) {
+      setCurrentMatchId(realMatches[0].id);
+    } else {
+      setCurrentMatchId(null);
+    }
+  };
+
   return {
     matches,
     currentMatchId,
@@ -221,6 +288,9 @@ export function useMatches() {
     loadDefaultMatchTemplate,
     hasDefaultMatchTemplate,
     createMatchFromTemplate,
+    loadTemplateAsMatch,
+    saveTemplateFromMatch,
+    deleteTemplateMatch,
     EXPORT_VERSION: EXPORT_DATA_VERSION
   };
 }

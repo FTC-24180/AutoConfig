@@ -184,6 +184,9 @@ function App() {
     onLoadDefaultMatchTemplate: () => {
       matchesHook.createMatchFromTemplate();
     },
+    onViewEditDefaultMatchTemplate: () => {
+      matchesHook.loadTemplateAsMatch();
+    },
     hasDefaultMatchTemplate: hasDefaultTemplate
   };
 
@@ -265,6 +268,20 @@ function App() {
         canGoNext={canGoNext()}
         onNext={handleNext}
         onPrev={handlePrev}
+        onSaveTemplate={() => {
+          if (matchesHook.currentMatchId && currentMatch?.isTemplate) {
+            if (matchesHook.saveTemplateFromMatch(matchesHook.currentMatchId)) {
+              alert('✓ Template saved successfully');
+            } else {
+              alert('❌ Failed to save template');
+            }
+          }
+        }}
+        onCloseTemplate={() => {
+          if (matchesHook.currentMatchId && currentMatch?.isTemplate) {
+            matchesHook.deleteTemplateMatch(matchesHook.currentMatchId);
+          }
+        }}
       />
 
       <HamburgerMenu ref={hamburgerMenuRef} {...menuProps} />
