@@ -1,46 +1,53 @@
 import { WizardStep } from '../WizardStep';
 import { AllianceIcon } from '../AllianceIcon';
 
-export function Step1MatchSetup({ matchNumber, partnerTeam, alliance, isTemplate, onMatchNumberChange, onPartnerTeamChange, onAllianceChange }) {
+export function Step1MatchSetup({ matchNumber, partnerTeam, alliance, onMatchNumberChange, onPartnerTeamChange, onAllianceChange }) {
+  const isDefaultTemplate = matchNumber === 0;
+  
   return (
     <WizardStep 
-      title={isTemplate ? "Default Template Setup" : "Match Setup"}
-      subtitle={isTemplate ? "Configure your default template" : "Configure your match details"}
+      title={isDefaultTemplate ? "Default Template Setup" : "Match Setup"}
+      subtitle={isDefaultTemplate ? "Configure your default template" : "Configure your match details"}
     >
       <div className="space-y-6">
-        {/* Match Number - Hide for template */}
-        {!isTemplate && (
-          <div>
-            <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-3">
-              Match Number
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={matchNumber}
-              onChange={(e) => onMatchNumberChange(parseInt(e.target.value) || 1)}
-              className="w-full text-2xl font-bold px-4 py-4 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[60px] touch-manipulation"
-              placeholder="1"
-            />
-          </div>
-        )}
+        {/* Match Number - Show for all matches including template (match 0) */}
+        <div>
+          <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-3">
+            Match Number
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={matchNumber}
+            onChange={(e) => onMatchNumberChange(parseInt(e.target.value) || 0)}
+            className="w-full text-2xl font-bold px-4 py-4 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[60px] touch-manipulation"
+            placeholder="0"
+            disabled={isDefaultTemplate}
+          />
+          {isDefaultTemplate && (
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+              </svg>
+              This is your default template match (Match #0)
+            </p>
+          )}
+        </div>
 
-        {/* Partner Team - Hide for template */}
-        {!isTemplate && (
-          <div>
-            <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-3">
-              Partner Team Number
-            </label>
-            <input
-              type="text"
-              value={partnerTeam}
-              onChange={(e) => onPartnerTeamChange(e.target.value)}
-              className="w-full text-xl font-bold px-4 py-4 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[60px] touch-manipulation"
-              placeholder="Enter team number"
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Optional - Leave blank if not yet assigned</p>
-          </div>
-        )}
+        {/* Partner Team */}
+        <div>
+          <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-3">
+            Partner Team Number
+          </label>
+          <input
+            type="text"
+            value={partnerTeam}
+            onChange={(e) => onPartnerTeamChange(e.target.value)}
+            className="w-full text-xl font-bold px-4 py-4 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 min-h-[60px] touch-manipulation"
+            placeholder="Enter team number"
+          />
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Optional - Leave blank if not yet assigned</p>
+        </div>
 
         {/* Alliance Selection */}
         <div>
@@ -152,11 +159,11 @@ export function Step1MatchSetup({ matchNumber, partnerTeam, alliance, isTemplate
             </svg>
             <div>
               <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-1">
-                {isTemplate ? "Template Information" : "Match Information"}
+                {isDefaultTemplate ? "Template Information" : "Match Information"}
               </h4>
               <p className="text-sm text-blue-900 dark:text-blue-200">
-                {isTemplate 
-                  ? `This is your default template. It will be used as the starting configuration when creating new matches from the template.`
+                {isDefaultTemplate 
+                  ? `This is your default template (Match #0). It will be used as the starting configuration when creating new matches from the template.`
                   : `This configuration will be used for Match #${matchNumber} on the ${alliance.toUpperCase()} alliance${partnerTeam ? ` with partner team ${partnerTeam}` : ''}.`
                 }
               </p>

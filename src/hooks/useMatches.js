@@ -161,39 +161,72 @@ export function useMatches() {
     }
   };
 
-  const saveDefaultMatchTemplate = (matchId) => {
+  const saveMatchAsDefaultTemplate = (matchId) => {
     const match = matches.find(m => m.id === matchId);
     if (!match) return false;
 
-    const template = {
-      alliance: match.alliance,
-      startPosition: match.startPosition,
-      // eslint-disable-next-line no-unused-vars
-      actions: match.actions.map(({ id, ...rest }) => rest) // Omit internal UUID
-    };
+    // Check if template match (match 0) already exists
+    const existingTemplate = matches.find(m => m.matchNumber === 0);
     
-    return setStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, template);
-  };
-
-  const loadDefaultMatchTemplate = () => {
-    const template = getStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, null);
-    return template;
+    if (existingTemplate) {
+      // Update existing template match
+      setMatches(prev => prev.map(m => 
+        m.matchNumber === 0 
+          ? {
+              ...m,
+              alliance: match.alliance,
+              startPosition: match.startPosition,
+              actions: match.actions.map(action => ({
+                ...action,
+                id: crypto.randomUUID() // Generate new UUIDs for template
+              }))
+            }
+          : m
+      ));
+    } else {
+      // Create new template match with matchNumber 0
+      const templateMatch = {
+        id: crypto.randomUUID(),
+        matchNumber: 0,
+        partnerTeam: '',
+        alliance: match.alliance,
+        startPosition: match.startPosition,
+        actions: match.actions.map(action => ({
+          ...action,
+          id: crypto.randomUUID() // Generate new UUIDs for template
+        }))
+      };
+      
+      // Add template match at the beginning
+      setMatches(prev => [templateMatch, ...prev]);
+    }
+    
+    return true;
   };
 
   const hasDefaultMatchTemplate = () => {
-    const template = getStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, null);
-    return template !== null;
+    return matches.some(m => m.matchNumber === 0);
+  };
+
+  const getDefaultMatchTemplate = () => {
+    return matches.find(m => m.matchNumber === 0) || null;
   };
 
   const createMatchFromTemplate = () => {
-    const template = loadDefaultMatchTemplate();
+    const template = getDefaultMatchTemplate();
     if (!template) return null;
+
+    // Find the highest match number (excluding template match 0)
+    const regularMatches = matches.filter(m => m.matchNumber > 0);
+    const nextMatchNumber = regularMatches.length > 0 
+      ? Math.max(...regularMatches.map(m => m.matchNumber)) + 1 
+      : 1;
 
     const newMatch = {
       id: crypto.randomUUID(),
-      matchNumber: matches.length + 1,
+      matchNumber: nextMatchNumber,
       partnerTeam: '',
-      alliance: template.alliance || 'red',
+      alliance: template.alliance,
       startPosition: template.startPosition,
       actions: template.actions.map(action => ({
         ...action,
@@ -206,80 +239,19 @@ export function useMatches() {
     return newMatch.id;
   };
 
-  const loadTemplateAsMatch = () => {
-    const template = loadDefaultMatchTemplate();
-    if (!template) return null;
-
-    // Create a virtual match with match number 0 for editing the template
-    const templateMatch = {
-      id: 'template-match-0',
-      matchNumber: 0,
-      partnerTeam: '',
-      alliance: template.alliance || 'red',
-      startPosition: template.startPosition,
-      actions: template.actions.map(action => ({
-        ...action,
-        id: crypto.randomUUID() // Generate temporary UUID for editing
-      })),
-      isTemplate: true // Flag to indicate this is the template
-    };
+  const deleteDefaultTemplate = () => {
+    setMatches(prev => prev.filter(m => m.matchNumber !== 0));
     
-    // Add template match to the beginning of matches array temporarily
-    setMatches(prev => [templateMatch, ...prev]);
-    setCurrentMatchId(templateMatch.id);
-    return templateMatch.id;
-  };
-
-  const saveTemplateFromMatch = (matchId) => {
-    const match = matches.find(m => m.id === matchId);
-    if (!match || !match.isTemplate) return false;
-
-    const template = {
-      alliance: match.alliance,
-      startPosition: match.startPosition,
-      // eslint-disable-next-line no-unused-vars
-      actions: match.actions.map(({ id, ...rest }) => rest) // Omit internal UUID
-    };
-    
-    // Save the template
-    const success = setStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, template);
-    
-    // Remove the template match from the matches array and select first real match
-    setMatches(prev => {
-      const filtered = prev.filter(m => m.id !== matchId);
-      const realMatches = filtered.filter(m => !m.isTemplate);
-      
-      // Update current match selection
-      if (realMatches.length > 0) {
-        setCurrentMatchId(realMatches[0].id);
+    // If current match was the template, select first regular match
+    const currentMatch = matches.find(m => m.id === currentMatchId);
+    if (currentMatch && currentMatch.matchNumber === 0) {
+      const regularMatches = matches.filter(m => m.matchNumber > 0);
+      if (regularMatches.length > 0) {
+        setCurrentMatchId(regularMatches[0].id);
       } else {
         setCurrentMatchId(null);
       }
-      
-      return filtered;
-    });
-    
-    return success;
-  };
-
-  const deleteTemplateMatch = (matchId) => {
-    const match = matches.find(m => m.id === matchId);
-    if (!match || !match.isTemplate) return;
-
-    // Remove the template match from the matches array without saving
-    setMatches(prev => {
-      const filtered = prev.filter(m => m.id !== matchId);
-      const realMatches = filtered.filter(m => !m.isTemplate);
-      
-      // Update current match selection
-      if (realMatches.length > 0) {
-        setCurrentMatchId(realMatches[0].id);
-      } else {
-        setCurrentMatchId(null);
-      }
-      
-      return filtered;
-    });
+    }
   };
 
   return {
@@ -294,13 +266,11 @@ export function useMatches() {
     exportAllMatches,
     exportSingleMatch,
     importMatches,
-    saveDefaultMatchTemplate,
-    loadDefaultMatchTemplate,
+    saveMatchAsDefaultTemplate,
+    getDefaultMatchTemplate,
     hasDefaultMatchTemplate,
     createMatchFromTemplate,
-    loadTemplateAsMatch,
-    saveTemplateFromMatch,
-    deleteTemplateMatch,
+    deleteDefaultTemplate,
     EXPORT_VERSION: EXPORT_DATA_VERSION
   };
 }

@@ -50,7 +50,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
   // Props for default match template
   onSaveDefaultMatchTemplate,
   onLoadDefaultMatchTemplate,
-  onViewEditDefaultMatchTemplate,
   hasDefaultMatchTemplate
 }, ref) {
   const [isOpen, setIsOpen] = useState(false);
@@ -163,7 +162,11 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
       }
       
       if (clearDataOptions.defaultMatchTemplate) {
-        removeStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE);
+        // Delete the template match (match 0)
+        const templateMatch = matches.find(m => m.matchNumber === 0);
+        if (templateMatch) {
+          onDeleteMatch(templateMatch.id);
+        }
       }
       
       if (clearDataOptions.templates) {
@@ -417,7 +420,6 @@ export const HamburgerMenu = forwardRef(function HamburgerMenu({
                 onExportJSON={onExportJSON}
                 onSaveDefaultTemplate={onSaveDefaultMatchTemplate}
                 onLoadDefaultTemplate={onLoadDefaultMatchTemplate}
-                onViewEditTemplate={onViewEditDefaultMatchTemplate}
                 hasDefaultTemplate={hasDefaultMatchTemplate}
                 onClose={closeMenu}
               />

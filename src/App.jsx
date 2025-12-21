@@ -174,18 +174,15 @@ function App() {
     positionsError: startPositionsHook.error,
     clearPositionsError: startPositionsHook.clearError,
     onSaveDefaultMatchTemplate: (matchId) => {
-      if (matchesHook.saveDefaultMatchTemplate(matchId)) {
+      if (matchesHook.saveMatchAsDefaultTemplate(matchId)) {
         setHasDefaultTemplate(true);
-        alert('✓ Default match template saved successfully');
+        alert('✓ Match saved as default template successfully');
       } else {
-        alert('❌ Failed to save default match template');
+        alert('❌ Failed to save match as default template');
       }
     },
     onLoadDefaultMatchTemplate: () => {
       matchesHook.createMatchFromTemplate();
-    },
-    onViewEditDefaultMatchTemplate: () => {
-      matchesHook.loadTemplateAsMatch();
     },
     hasDefaultMatchTemplate: hasDefaultTemplate
   };
@@ -268,20 +265,6 @@ function App() {
         canGoNext={canGoNext()}
         onNext={handleNext}
         onPrev={handlePrev}
-        onSaveTemplate={() => {
-          if (matchesHook.currentMatchId && currentMatch?.isTemplate) {
-            if (matchesHook.saveTemplateFromMatch(matchesHook.currentMatchId)) {
-              alert('✓ Template saved successfully');
-            } else {
-              alert('❌ Failed to save template');
-            }
-          }
-        }}
-        onCloseTemplate={() => {
-          if (matchesHook.currentMatchId && currentMatch?.isTemplate) {
-            matchesHook.deleteTemplateMatch(matchesHook.currentMatchId);
-          }
-        }}
       />
 
       <HamburgerMenu ref={hamburgerMenuRef} {...menuProps} />
