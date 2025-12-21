@@ -6,6 +6,9 @@ export function MatchesMenu({
   onDuplicateMatch,
   onDeleteMatch,
   onExportJSON,
+  onSaveDefaultTemplate,
+  onLoadDefaultTemplate,
+  hasDefaultTemplate,
   onClose
 }) {
   return (
@@ -23,6 +26,22 @@ export function MatchesMenu({
         </svg>
         Add New Match
       </button>
+
+      {/* Add Match from Template Button - Only show if template exists */}
+      {hasDefaultTemplate && (
+        <button
+          onClick={() => {
+            onLoadDefaultTemplate();
+            onClose();
+          }}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 active:bg-indigo-700 text-white rounded-lg font-semibold min-h-[48px] touch-manipulation"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Add Match from Template
+        </button>
+      )}
 
       {/* Matches List */}
       {matches && matches.length > 0 ? (
@@ -56,11 +75,23 @@ export function MatchesMenu({
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-300">
                     {match.partnerTeam ? `Partner: ${match.partnerTeam}` : 'No partner'}
-                    {' • '}
+                    {' ï¿½ '}
                     {match.actions?.length || 0} action{match.actions?.length !== 1 ? 's' : ''}
                   </div>
                 </div>
                 <div className="flex gap-1 ml-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSaveDefaultTemplate(match.id);
+                    }}
+                    className="p-2 hover:bg-amber-100 dark:hover:bg-amber-500/20 active:bg-amber-200 rounded-lg transition min-h-[36px] min-w-[36px] flex items-center justify-center touch-manipulation"
+                    title="Save as Default Template"
+                  >
+                    <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

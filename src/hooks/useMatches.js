@@ -88,6 +88,7 @@ export function useMatches() {
     // Export in hierarchical JSON structure
     const config = {
       version: EXPORT_DATA_VERSION,
+      // eslint-disable-next-line no-unused-vars
       matches: matches.map(({ id, matchNumber, partnerTeam, alliance, startPosition, actions }) => ({
         match: {
           number: matchNumber,
@@ -97,6 +98,7 @@ export function useMatches() {
             auto: {
               startPosition: startPosition,
               // Keep type and label, omit internal UUID
+              // eslint-disable-next-line no-unused-vars
               actions: actions.map(({ id, ...rest }) => rest)
             }
           }
@@ -120,6 +122,7 @@ export function useMatches() {
           auto: {
             startPosition: match.startPosition,
             // Keep type and label, omit internal UUID
+            // eslint-disable-next-line no-unused-vars
             actions: match.actions.map(({ id, ...rest }) => rest)
           }
         }
@@ -158,6 +161,50 @@ export function useMatches() {
     }
   };
 
+  const saveDefaultMatchTemplate = (matchId) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return false;
+
+    const template = {
+      startPosition: match.startPosition,
+      // eslint-disable-next-line no-unused-vars
+      actions: match.actions.map(({ id, ...rest }) => rest) // Omit internal UUID
+    };
+    
+    return setStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, template);
+  };
+
+  const loadDefaultMatchTemplate = () => {
+    const template = getStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, null);
+    return template;
+  };
+
+  const hasDefaultMatchTemplate = () => {
+    const template = getStorageItem(STORAGE_KEYS.DEFAULT_MATCH_TEMPLATE, null);
+    return template !== null;
+  };
+
+  const createMatchFromTemplate = () => {
+    const template = loadDefaultMatchTemplate();
+    if (!template) return null;
+
+    const newMatch = {
+      id: crypto.randomUUID(),
+      matchNumber: matches.length + 1,
+      partnerTeam: '',
+      alliance: 'red',
+      startPosition: template.startPosition,
+      actions: template.actions.map(action => ({
+        ...action,
+        id: crypto.randomUUID() // Generate new internal UUID
+      }))
+    };
+    
+    setMatches(prev => [...prev, newMatch]);
+    setCurrentMatchId(newMatch.id);
+    return newMatch.id;
+  };
+
   return {
     matches,
     currentMatchId,
@@ -170,6 +217,10 @@ export function useMatches() {
     exportAllMatches,
     exportSingleMatch,
     importMatches,
+    saveDefaultMatchTemplate,
+    loadDefaultMatchTemplate,
+    hasDefaultMatchTemplate,
+    createMatchFromTemplate,
     EXPORT_VERSION: EXPORT_DATA_VERSION
   };
 }

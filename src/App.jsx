@@ -163,7 +163,18 @@ function App() {
     onDeleteStartPosition: startPositionsHook.deleteStartPosition,
     getNextStartKey: startPositionsHook.getNextKey,
     positionsError: startPositionsHook.error,
-    clearPositionsError: startPositionsHook.clearError
+    clearPositionsError: startPositionsHook.clearError,
+    onSaveDefaultMatchTemplate: (matchId) => {
+      if (matchesHook.saveDefaultMatchTemplate(matchId)) {
+        alert('✓ Default match template saved successfully');
+      } else {
+        alert('❌ Failed to save default match template');
+      }
+    },
+    onLoadDefaultMatchTemplate: () => {
+      matchesHook.createMatchFromTemplate();
+    },
+    hasDefaultMatchTemplate: matchesHook.hasDefaultMatchTemplate()
   };
 
   // Show welcome screen if no matches exist
