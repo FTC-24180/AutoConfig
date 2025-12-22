@@ -46,7 +46,6 @@
 * improved ux for adding new action items ([913e114](https://github.com/FTC-24180/Autofig/commit/913e114bb7435e47ddd2e6befb6b80f604e2588c))
 * improved ux for adding new start positions ([2836abd](https://github.com/FTC-24180/Autofig/commit/2836abdff63ea2a8c064ed5cbc9a6713eed27a71))
 * **issue-5:** broken "Configure Actions" button on welcome screen ([e5c6cf5](https://github.com/FTC-24180/Autofig/commit/e5c6cf574741fc85d49060fc575689e99bedb3d3))
-* **issue-5:** broken "Configure Actions" button on welcome screen ([ce5ef53](https://github.com/FTC-24180/Autofig/commit/ce5ef53925e104e3bd52f48b10e4d6418f01d659))
 * load configuration didn't load actions ([810df7c](https://github.com/FTC-24180/Autofig/commit/810df7c55263616d49bea2744c570788c35ef7c5))
 * partial screen height usage on configure actions step ([e9ac5f2](https://github.com/FTC-24180/Autofig/commit/e9ac5f2d7cc335d0c93ead83d0cb01827f04f417))
 * terse format explainer not updating when switching matches ([2029503](https://github.com/FTC-24180/Autofig/commit/20295035b6701ccf0295109923b5d0e6f88fbd86))
